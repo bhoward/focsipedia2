@@ -24,6 +24,7 @@ sections:
   - file: sets/algebra
   - file: sets/programming
   - file: sets/functions
+  - file: sets/relations
 - file: fp/index
   sections:
   - file: fp/intro
