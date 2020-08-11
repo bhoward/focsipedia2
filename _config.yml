@@ -1,0 +1,11 @@
+# Book settings
+title: FoCSipedia
+author: Brian T. Howard, based in part on material by Carol Critchlow and David Eck
+logo: img/SmartFoxLogo.jpeg
+
+latex:
+  latex_documents:
+    targetname: book.tex
+
+html:
+  favicon: img/favicon.ico
