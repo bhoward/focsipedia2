@@ -8,4 +8,4 @@ This is in contrast to the classical mathematical focus on real numbers and form
 Instead, our foundations come from logic, set theory, and abstract algebra: how can we express operations on collections of bits? how can we use those operations to build common data structures and algorithms? how can we verify that our programs build on these structures are correct, and analyze their behavior?
 A large part of this course is organized around a variety of _models_ of computation: circuit-level logic gates; discrete structures such as lists, trees, and graphs; formal languages and machines; and functional programming as a disciplined way of working with these models.
 
-Examples of multiple levels: 
+Examples of multiple levels: web browser (html, css, js interp/comp, db, tcp/ip), cpu design (comb/seq logic, graph layout, verification)
