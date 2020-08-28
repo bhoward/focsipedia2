@@ -16,7 +16,7 @@ repository:
   branch                    : master
 
 launch_buttons:
-  notebook_interface: "jupyterlab"
+  notebook_interface: "classic"
   binderhub_url: "https://mybinder.org"
   thebe: true
 
