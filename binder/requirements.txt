@@ -2,4 +2,5 @@ jupyterlab>=2.1
 matplotlib==3.*
 ipywidgets>=7.5
 jupytext[myst]>=1.5.2
-myst-nb~=0.8
+myst-nb==0.8.4
+myst-parser==0.9.1
