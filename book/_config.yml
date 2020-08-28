@@ -9,3 +9,16 @@ latex:
 
 html:
   favicon: img/favicon.ico
+
+repository:
+  url                       : https://github.com/bhoward/focsipedia2
+  path_to_book              : book
+  branch                    : master
+
+launch_buttons:
+  notebook_interface: "jupyterlab"
+  binderhub_url: "https://mybinder.org"
+  thebe: true
+
+execute:
+  execute_notebooks: cache

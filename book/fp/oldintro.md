@@ -1,17 +1,3 @@
----
-jupytext:
-  formats: ipynb,md:myst
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: '0.9'
-    jupytext_version: 1.5.2
-kernelspec:
-  display_name: Scala
-  language: scala
-  name: scala
----
-
 # Introduction to Functional Programming
 
 (Content adapted from Critchlow & Eck)
@@ -33,7 +19,7 @@ int cube(int n) {
 In Java, _int_ is a data type.  From the mathematical
 point of view, a data type is a set.  The data type _int_
 is the set of all integers that can be represented as 32-bit 
-binary numbers.  Mathematically, then, $\textit{int}\subseteq\mathbb{Z}$.
+binary numbers.  Mathematically, then, $\textit{int}\subseteq\Z$.
 (You should get used to the fact that sets and functions can
 have names that consist of more than one character, since
 it's done all the time in computer programming.)
@@ -42,8 +28,8 @@ The first line of the above function definition,
 a function named _cube_ whose range is _int_
 and whose domain is _int_.  In the usual notation for
 functions, we would express this as $\textit{cube}\colon \textit{int}\to\textit{int}$,
-or possibly as $\textit{cube}\in{\textit{int}}^{\textit{int}}$,
-where ${\textit{int}}^{\textit{int}}$ is the set of all
+or possibly as $\textit{cube}\in{\textit{int}}^{\textit{\small{int}}}$,
+where ${\textit{int}}^{\textit{\small{int}}}$ is the set of all
 functions that map the set _int_ to the set _int_.
 
 The first line of the function, `int cube(int n)`, is called
@@ -153,7 +139,15 @@ programming.
 
 Unlike Java, a typical functional programming language such as Scala,
 Haskell, or ReasonML will actively discourage the use of side-effects
-in functions.[^io] The benefit of restricting the programmer to
+in functions.[^The most common exception is for functions that send
+output to the console, such as the `print_int` function in ReasonML.
+Being able to track execution and easily display results is very
+useful, and printing a line on the console is a fairly benign
+side-effect&mdash;it won't cause the function to return different
+values for the same arguments. However, printing a result can still
+interfere with algebraic reasoning about a program, because interchanging
+such a function call with its value can affect whether and how many times
+the output is printed.] The benefit of restricting the programmer to
 **pure** functions, that always return the same value for a given
 argument, is that it becomes possible to reason about the behavior
 **algebraically**, freely substituting the returned values in place
@@ -172,58 +166,51 @@ efficient version.
 
 One of the most common ways that a functional language will encourage
 pure functions is to do away with, or at least severely restrict, the
-ability to update the value assigned to a variable. In pure Scala, there
+ability to update the value assigned to a variable. In ReasonML, there
 is no assignment statement. When a value is bound to a variable with a
-`val` statement, that variable will then remain bound to that value for
+`let` statement, that variable will then remain bound to that value for
 as long as the variable exists. A variable will cease to exist when the
 block (such as a function body) containing it is finished:
-
-```{code-cell}
+```reason demo
 {
-  val x = 42
-  println(x)  // prints 42
+  let x = 42;
+  print_int(x); print_newline(); /* prints 42 */
 }
-// x no longer exists here
+/* x no longer exists here */
 ```
-
 A variable may be temporarily **shadowed** by another variable with the same
 name. This may look like an assignment of a changed value to a variable,
 but each use of the `let` statement will create a new named location in
 memory; if the shadowing variable goes away, the original one will become
 visible again with its correct value:
-
-```{code-cell}
-val x = 42
-println(x)  // prints 42
+```reason demo
+let x = 42;
+print_int(x); print_newline(); /* prints 42 */
 {
-  val x = 17  // shadows earlier definition of x
-  println(x)  // prints 17
+  let x = 17; /* shadows earlier definition of x */
+  print_int(x); print_newline(); /* prints 17 */
 }
-println(x)  // prints 42 again
+print_int(x); print_newline(); /* prints 42 again */
 ```
 
 Again, this behavior permits algebraic reasoning about the program. The above
 code is equivalent to
-
-```{code-cell}
-val x = 42
-println(x)
+```reason demo
+let x = 42;
+print_int(x); print_newline();
 {
-  val y = 17
-  println(y)
+  let y = 17;
+  print_int(y); print_newline();
 }
-println(x)
+print_int(x); print_newline();
 ```
-
 where we have uniformly renamed the inner variable _x_ as _y_ to make it clear
 that they are distinct variables. It is also equivalent to
-
-```{code-cell}
-println(42)
-println(17)
-println(42)
+```reason demo
+print_int(42); print_newline();
+print_int(17); print_newline();
+print_int(42); print_newline();
 ```
-
 where we have replaced each use of our identifiers with its value. The output is
 slightly different in this case, because we no longer have the top-level
 binding of 42 to _x_ that would have been available if we wrote additional lines
@@ -246,7 +233,8 @@ This is a signature for a function named _sumten_ whose
 parameter is a function object.  The parameter is specified by the
 type "`Function<Integer, Integer>`".  If _S_ and _T_ are types, then
 the type `Function<S, T>` represents functions from _S_ to _T_. Therefore,
-the parameter of _sumten_ is essentially a function from _int_ to _int_.[^int]
+the parameter of _sumten_ is essentially a function from _int_ to _int_.[^For
+our purposes we may ignore the distinction between _int_ and _Integer_ in Java.]
 The parameter name, $f$, stands for an arbitrary such function.  Mathematically,
 $f\in \textit{int}^{\textit{int}}$, and so
 $\textit{sumten}\colon \textit{int}^{\textit{int}}\to\textit{int}$.
@@ -275,7 +263,14 @@ argument in Java. If we want to pass the method _m_ of an object
 _x_, where the signature of _m_ is `int m( int i )`, then
 we can call our function as `sum(x::m, a, b)`. However, a more
 general technique is to use an **anonymous function**, also known
-as a **lambda**.[^lambda]
+as a **lambda**.[^The mathematician Alonzo Church introduced in
+the 1930's the use of the Greek letter lambda ($\lambda$) to indicate an
+otherwise unnamed function defined by a formula. That is, instead
+of writing "the function $f$ where $f(x) = \textit{some formula}$",
+he wrote "$\lambda x(\textit{some formula})$". When the first
+functional programming language, LISP (invented in the late 1950's),
+needed a way to create function values, John McCarthy adopted Church's
+use of lambda, and the name has stuck.]
 
 ## Anonymous functions
 
@@ -293,13 +288,13 @@ which is 216.
 Many languages now support a similar syntax for creating anonymous
 function values, and offer some facility for working with functions
 as (mostly) first-class objects. For example, the same function
-is expressed in Scala as `(i: Int) => { i * i * i }`. Since one of the hallmarks of
+is expressed in ReasonML as `i => { i * i * i }`. Since one of the hallmarks of
 the functional languages is their ability to work with function
 values, you can imagine that they tend to provide the most
 thorough integration of functions with other kinds of values.
 
 Here are complete demos of the _sum_ example, first in Java and
-then in Scala:
+then in ReasonML:
 
 ```java
 import java.util.function.Function;
@@ -319,19 +314,18 @@ public class SumDemo {
 }
 ```
 
-```{code-cell}
-def sum(f: Int => Int, a: Int, b: Int): Int = {
+```reason edit
+let rec sum = (f, a, b) => {
   if (a > b) {
     0
   } else {
     f(a) + sum(f, a+1, b)
   }
-}
+};
 
-println(sum((i: Int) => { i * i * i }, 3, 5))
+print_int(sum(i => { i * i * i }, 3, 5));
+print_newline();
 ```
-
-**REWRITE THIS SECTION**
 
 Note that we define the function _sum_ in ReasonML by binding
 a function value to the name _sum_, just as we can bind other
@@ -463,24 +457,3 @@ let exercise = (a, b) => {
    * What is the value of `exercise(12, 13)`?
    * Use algebraic substitution to evaluate `exercise(a, b)` in terms of the
      variables `a` and `b`.
-
-[^io]: The most common exception is for functions that send
-output to the console, such as the `print_int` function in ReasonML.
-Being able to track execution and easily display results is very
-useful, and printing a line on the console is a fairly benign
-side-effect&mdash;it won't cause the function to return different
-values for the same arguments. However, printing a result can still
-interfere with algebraic reasoning about a program, because interchanging
-such a function call with its value can affect whether and how many times
-the output is printed.
-
-[^int]: For our purposes we may ignore the distinction between _int_ and _Integer_ in Java.
-
-[^lambda]: The mathematician Alonzo Church introduced in
-the 1930's the use of the Greek letter lambda ($\lambda$) to indicate an
-otherwise unnamed function defined by a formula. That is, instead
-of writing "the function $f$ where $f(x) = \textit{some formula}$",
-he wrote "$\lambda x(\textit{some formula})$". When the first
-functional programming language, LISP (invented in the late 1950's),
-needed a way to create function values, John McCarthy adopted Church's
-use of lambda, and the name has stuck.
