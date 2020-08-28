@@ -48,10 +48,9 @@ rm -f almond-scala-2.13
 #rm -f almond-scala-2.11
 
 # Install required Jupyter/JupyterLab extensions
-jupyter labextension install jupyterlab-plotly@4.8.1
-jupyter labextension install @jupyterlab/toc
-jupyter labextension install jupyterlab-drawio
-jupyter lab build --dev-build=False --minimize=False
+jupyter labextension install --minimize=False jupyterlab-plotly@4.8.1
+jupyter labextension install --minimize=False @jupyterlab/toc
+jupyter labextension install --minimize=False jupyterlab-drawio
 
 # Set indentation to two spaces
 JUPYTER_CONFIG_DIR=$(jupyter --config-dir)
