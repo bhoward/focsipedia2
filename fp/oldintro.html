@@ -40,8 +40,6 @@
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Types in Functional Programming" href="types.html" />
-    <link rel="prev" title="Functional Programming" href="index.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="docsearch:language" content="en">
@@ -74,7 +72,7 @@
 </form>
 
 <nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-  <ul class="current nav sidenav_l1">
+  <ul class="nav sidenav_l1">
  <li class="toctree-l1">
   <a class="reference internal" href="../attribution.html">
    Attribution
@@ -100,67 +98,10 @@
    Sets
   </a>
  </li>
- <li class="toctree-l1 current active">
+ <li class="toctree-l1">
   <a class="reference internal" href="index.html">
    Functional Programming
   </a>
-  <ul class="current">
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
-     Introduction to Functional Programming
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="types.html">
-     Types in Functional Programming
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="map-reduce.html">
-     Map and Reduce on Lists
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="doodle.html">
-     DPoodle Graphics
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="doodle-project.html">
-     DPoodle Graphics Drawing Project
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="scaladoodle.html">
-     Scala Doodle
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="galleryS20A.html">
-     Spring 2020 DPoodle Gallery, Section A
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="galleryS20B.html">
-     Spring 2020 DPoodle Gallery, Section B
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="state.html">
-     State Machines in Java and ReasonML
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="parser-comb.html">
-     Recursive Descent and Parser Combinators
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="lambda.html">
-     Lambda Calculus
-    </a>
-   </li>
-  </ul>
  </li>
  <li class="toctree-l1">
   <a class="reference internal" href="../ds/index.html">
@@ -208,12 +149,9 @@
     
     <div class="dropdown-buttons">
         <!-- ipynb file if we had a myst markdown file -->
-        <a class="dropdown-buttons"
-            href="../_sources/fp/intro.ipynb"><button type="button"
-                class="btn btn-secondary topbarbtn" title="Download notebook file" data-toggle="tooltip"
-                data-placement="left">.ipynb</button></a>
+        
         <!-- Download raw file -->
-        <a class="dropdown-buttons" href="../_sources/fp/intro.md"><button type="button"
+        <a class="dropdown-buttons" href="../_sources/fp/oldintro.md"><button type="button"
                 class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
                 data-placement="left">.md</button></a>
         <!-- Download PDF via print -->
@@ -231,26 +169,6 @@
                     class="fas fa-expand"></i></button></a>
 
         <!-- Launch buttons -->
-
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Launch interactive content"><i class="fas fa-rocket"></i></button>
-    <div class="dropdown-buttons">
-        
-        <a class="binder-button" href="https://mybinder.org/v2/gh/bhoward/focsipedia2/master?urlpath=lab/tree/book/fp/intro.ipynb"><button type="button"
-                class="btn btn-secondary topbarbtn" title="Launch Binder" data-toggle="tooltip"
-                data-placement="left"><img class="binder-button-logo"
-                    src="../_static/images/logo_binder.svg"
-                    alt="Interact on binder">Binder</button></a>
-        
-        
-        
-        <button type="button" class="btn btn-secondary topbarbtn"
-            onclick="initThebeSBT()" title="Launch Thebe" data-toggle="tooltip" data-placement="left"><i
-                class="fas fa-play"></i><span style="margin-left: .4em;">Live Code</span></button>
-        
-    </div>
-</div>
 
     </div>
 
@@ -315,7 +233,7 @@ could be written</p>
 <p>In Java, <em>int</em> is a data type.  From the mathematical
 point of view, a data type is a set.  The data type <em>int</em>
 is the set of all integers that can be represented as 32-bit
-binary numbers.  Mathematically, then, <span class="math notranslate nohighlight">\(\textit{int}\subseteq\mathbb{Z}\)</span>.
+binary numbers.  Mathematically, then, <span class="math notranslate nohighlight">\(\textit{int}\subseteq\Z\)</span>.
 (You should get used to the fact that sets and functions can
 have names that consist of more than one character, since
 it’s done all the time in computer programming.)
@@ -324,8 +242,8 @@ The first line of the above function definition,
 a function named <em>cube</em> whose range is <em>int</em>
 and whose domain is <em>int</em>.  In the usual notation for
 functions, we would express this as <span class="math notranslate nohighlight">\(\textit{cube}\colon \textit{int}\to\textit{int}\)</span>,
-or possibly as <span class="math notranslate nohighlight">\(\textit{cube}\in{\textit{int}}^{\textit{int}}\)</span>,
-where <span class="math notranslate nohighlight">\({\textit{int}}^{\textit{int}}\)</span> is the set of all
+or possibly as <span class="math notranslate nohighlight">\(\textit{cube}\in{\textit{int}}^{\textit{\small{int}}}\)</span>,
+where <span class="math notranslate nohighlight">\({\textit{int}}^{\textit{\small{int}}}\)</span> is the set of all
 functions that map the set <em>int</em> to the set <em>int</em>.</p>
 <p>The first line of the function, <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">cube(int</span> <span class="pre">n)</span></code>, is called
 the <strong>signature</strong> of the function (in some languages, such as C++, it
@@ -428,7 +346,15 @@ programming.</p>
 <h2>Pure Functional Programming<a class="headerlink" href="#pure-functional-programming" title="Permalink to this headline">¶</a></h2>
 <p>Unlike Java, a typical functional programming language such as Scala,
 Haskell, or ReasonML will actively discourage the use of side-effects
-in functions.<a class="footnote-reference brackets" href="#io" id="id1">1</a> The benefit of restricting the programmer to
+in functions.[^The most common exception is for functions that send
+output to the console, such as the <code class="docutils literal notranslate"><span class="pre">print_int</span></code> function in ReasonML.
+Being able to track execution and easily display results is very
+useful, and printing a line on the console is a fairly benign
+side-effect—it won’t cause the function to return different
+values for the same arguments. However, printing a result can still
+interfere with algebraic reasoning about a program, because interchanging
+such a function call with its value can affect whether and how many times
+the output is printed.] The benefit of restricting the programmer to
 <strong>pure</strong> functions, that always return the same value for a given
 argument, is that it becomes possible to reason about the behavior
 <strong>algebraically</strong>, freely substituting the returned values in place
@@ -445,142 +371,49 @@ any equivalent expression for evaluation, ideally choosing the most
 efficient version.</p>
 <p>One of the most common ways that a functional language will encourage
 pure functions is to do away with, or at least severely restrict, the
-ability to update the value assigned to a variable. In pure Scala, there
+ability to update the value assigned to a variable. In ReasonML, there
 is no assignment statement. When a value is bound to a variable with a
-<code class="docutils literal notranslate"><span class="pre">val</span></code> statement, that variable will then remain bound to that value for
+<code class="docutils literal notranslate"><span class="pre">let</span></code> statement, that variable will then remain bound to that value for
 as long as the variable exists. A variable will cease to exist when the
 block (such as a function body) containing it is finished:</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="n">val</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">42</span>
-  <span class="n">println</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="o">//</span> <span class="n">prints</span> <span class="mi">42</span>
-<span class="p">}</span>
-<span class="o">//</span> <span class="n">x</span> <span class="n">no</span> <span class="n">longer</span> <span class="n">exists</span> <span class="n">here</span>
+<div class="highlight-reason notranslate"><div class="highlight"><pre><span></span><span class="ow">{</span>
+  <span class="k">let</span> <span class="n">x</span> <span class="ow">=</span> <span class="mi">42</span><span class="ow">;</span>
+  <span class="n">print_int</span><span class="ow">(</span><span class="n">x</span><span class="ow">);</span> <span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span> <span class="cm">/* prints 42 */</span>
+<span class="ow">}</span>
+<span class="cm">/* x no longer exists here */</span>
 </pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>42
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output text_plain highlight-none notranslate"><div class="highlight"><pre><span></span>x: Int = 42
-</pre></div>
-</div>
-</div>
 </div>
 <p>A variable may be temporarily <strong>shadowed</strong> by another variable with the same
 name. This may look like an assignment of a changed value to a variable,
 but each use of the <code class="docutils literal notranslate"><span class="pre">let</span></code> statement will create a new named location in
 memory; if the shadowing variable goes away, the original one will become
 visible again with its correct value:</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">val</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">42</span>
-<span class="n">println</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="o">//</span> <span class="n">prints</span> <span class="mi">42</span>
-<span class="p">{</span>
-  <span class="n">val</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">17</span>  <span class="o">//</span> <span class="n">shadows</span> <span class="n">earlier</span> <span class="n">definition</span> <span class="n">of</span> <span class="n">x</span>
-  <span class="n">println</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="o">//</span> <span class="n">prints</span> <span class="mi">17</span>
-<span class="p">}</span>
-<span class="n">println</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="o">//</span> <span class="n">prints</span> <span class="mi">42</span> <span class="n">again</span>
+<div class="highlight-reason notranslate"><div class="highlight"><pre><span></span><span class="k">let</span> <span class="n">x</span> <span class="ow">=</span> <span class="mi">42</span><span class="ow">;</span>
+<span class="n">print_int</span><span class="ow">(</span><span class="n">x</span><span class="ow">);</span> <span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span> <span class="cm">/* prints 42 */</span>
+<span class="ow">{</span>
+  <span class="k">let</span> <span class="n">x</span> <span class="ow">=</span> <span class="mi">17</span><span class="ow">;</span> <span class="cm">/* shadows earlier definition of x */</span>
+  <span class="n">print_int</span><span class="ow">(</span><span class="n">x</span><span class="ow">);</span> <span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span> <span class="cm">/* prints 17 */</span>
+<span class="ow">}</span>
+<span class="n">print_int</span><span class="ow">(</span><span class="n">x</span><span class="ow">);</span> <span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span> <span class="cm">/* prints 42 again */</span>
 </pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>42
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>17
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>42
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output text_plain highlight-none notranslate"><div class="highlight"><pre><span></span>x: Int = 42
-</pre></div>
-</div>
-</div>
 </div>
 <p>Again, this behavior permits algebraic reasoning about the program. The above
 code is equivalent to</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">val</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">42</span>
-<span class="n">println</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="n">val</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">17</span>
-  <span class="n">println</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-<span class="p">}</span>
-<span class="n">println</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<div class="highlight-reason notranslate"><div class="highlight"><pre><span></span><span class="k">let</span> <span class="n">x</span> <span class="ow">=</span> <span class="mi">42</span><span class="ow">;</span>
+<span class="n">print_int</span><span class="ow">(</span><span class="n">x</span><span class="ow">);</span> <span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span>
+<span class="ow">{</span>
+  <span class="k">let</span> <span class="n">y</span> <span class="ow">=</span> <span class="mi">17</span><span class="ow">;</span>
+  <span class="n">print_int</span><span class="ow">(</span><span class="n">y</span><span class="ow">);</span> <span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span>
+<span class="ow">}</span>
+<span class="n">print_int</span><span class="ow">(</span><span class="n">x</span><span class="ow">);</span> <span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span>
 </pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>42
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>17
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>42
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output text_plain highlight-none notranslate"><div class="highlight"><pre><span></span>x: Int = 42
-</pre></div>
-</div>
-</div>
 </div>
 <p>where we have uniformly renamed the inner variable <em>x</em> as <em>y</em> to make it clear
 that they are distinct variables. It is also equivalent to</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">println</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-<span class="n">println</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>
-<span class="n">println</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<div class="highlight-reason notranslate"><div class="highlight"><pre><span></span><span class="n">print_int</span><span class="ow">(</span><span class="mi">42</span><span class="ow">);</span> <span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span>
+<span class="n">print_int</span><span class="ow">(</span><span class="mi">17</span><span class="ow">);</span> <span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span>
+<span class="n">print_int</span><span class="ow">(</span><span class="mi">42</span><span class="ow">);</span> <span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span>
 </pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>42
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>17
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>42
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
 </div>
 <p>where we have replaced each use of our identifiers with its value. The output is
 slightly different in this case, because we no longer have the top-level
@@ -604,7 +437,8 @@ For example, consider the function signature</p>
 parameter is a function object.  The parameter is specified by the
 type “<code class="docutils literal notranslate"><span class="pre">Function&lt;Integer,</span> <span class="pre">Integer&gt;</span></code>”.  If <em>S</em> and <em>T</em> are types, then
 the type <code class="docutils literal notranslate"><span class="pre">Function&lt;S,</span> <span class="pre">T&gt;</span></code> represents functions from <em>S</em> to <em>T</em>. Therefore,
-the parameter of <em>sumten</em> is essentially a function from <em>int</em> to <em>int</em>.<a class="footnote-reference brackets" href="#int" id="id2">2</a>
+the parameter of <em>sumten</em> is essentially a function from <em>int</em> to <em>int</em>.[^For
+our purposes we may ignore the distinction between <em>int</em> and <em>Integer</em> in Java.]
 The parameter name, <span class="math notranslate nohighlight">\(f\)</span>, stands for an arbitrary such function.  Mathematically,
 <span class="math notranslate nohighlight">\(f\in \textit{int}^{\textit{int}}\)</span>, and so
 <span class="math notranslate nohighlight">\(\textit{sumten}\colon \textit{int}^{\textit{int}}\to\textit{int}\)</span>.</p>
@@ -631,7 +465,14 @@ argument in Java. If we want to pass the method <em>m</em> of an object
 <em>x</em>, where the signature of <em>m</em> is <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">m(</span> <span class="pre">int</span> <span class="pre">i</span> <span class="pre">)</span></code>, then
 we can call our function as <code class="docutils literal notranslate"><span class="pre">sum(x::m,</span> <span class="pre">a,</span> <span class="pre">b)</span></code>. However, a more
 general technique is to use an <strong>anonymous function</strong>, also known
-as a <strong>lambda</strong>.<a class="footnote-reference brackets" href="#lambda" id="id3">3</a></p>
+as a <strong>lambda</strong>.[^The mathematician Alonzo Church introduced in
+the 1930’s the use of the Greek letter lambda (<span class="math notranslate nohighlight">\(\lambda\)</span>) to indicate an
+otherwise unnamed function defined by a formula. That is, instead
+of writing “the function <span class="math notranslate nohighlight">\(f\)</span> where <span class="math notranslate nohighlight">\(f(x) = \textit{some formula}\)</span>”,
+he wrote “<span class="math notranslate nohighlight">\(\lambda x(\textit{some formula})\)</span>”. When the first
+functional programming language, LISP (invented in the late 1950’s),
+needed a way to create function values, John McCarthy adopted Church’s
+use of lambda, and the name has stuck.]</p>
 </div>
 <div class="section" id="anonymous-functions">
 <h2>Anonymous functions<a class="headerlink" href="#anonymous-functions" title="Permalink to this headline">¶</a></h2>
@@ -648,12 +489,12 @@ which is 216.</p>
 <p>Many languages now support a similar syntax for creating anonymous
 function values, and offer some facility for working with functions
 as (mostly) first-class objects. For example, the same function
-is expressed in Scala as <code class="docutils literal notranslate"><span class="pre">(i:</span> <span class="pre">Int)</span> <span class="pre">=&gt;</span> <span class="pre">{</span> <span class="pre">i</span> <span class="pre">*</span> <span class="pre">i</span> <span class="pre">*</span> <span class="pre">i</span> <span class="pre">}</span></code>. Since one of the hallmarks of
+is expressed in ReasonML as <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">=&gt;</span> <span class="pre">{</span> <span class="pre">i</span> <span class="pre">*</span> <span class="pre">i</span> <span class="pre">*</span> <span class="pre">i</span> <span class="pre">}</span></code>. Since one of the hallmarks of
 the functional languages is their ability to work with function
 values, you can imagine that they tend to provide the most
 thorough integration of functions with other kinds of values.</p>
 <p>Here are complete demos of the <em>sum</em> example, first in Java and
-then in Scala:</p>
+then in ReasonML:</p>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">java.util.function.Function</span><span class="p">;</span>
 
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">SumDemo</span> <span class="p">{</span>
@@ -671,33 +512,18 @@ then in Scala:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">f</span><span class="p">:</span> <span class="n">Int</span> <span class="o">=&gt;</span> <span class="n">Int</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="n">Int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Int</span><span class="p">):</span> <span class="n">Int</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight-reason notranslate"><div class="highlight"><pre><span></span><span class="k">let</span> <span class="k">rec</span> <span class="n">sum</span> <span class="ow">=</span> <span class="ow">(</span><span class="n">f</span><span class="ow">,</span> <span class="n">a</span><span class="ow">,</span> <span class="n">b</span><span class="ow">)</span> <span class="ow">=&gt;</span> <span class="ow">{</span>
+  <span class="k">if</span> <span class="ow">(</span><span class="n">a</span> <span class="ow">&gt;</span> <span class="n">b</span><span class="ow">)</span> <span class="ow">{</span>
     <span class="mi">0</span>
-  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">}</span>
+  <span class="ow">}</span> <span class="k">else</span> <span class="ow">{</span>
+    <span class="n">f</span><span class="ow">(</span><span class="n">a</span><span class="ow">)</span> <span class="ow">+</span> <span class="n">sum</span><span class="ow">(</span><span class="n">f</span><span class="ow">,</span> <span class="n">a</span><span class="ow">+</span><span class="mi">1</span><span class="ow">,</span> <span class="n">b</span><span class="ow">)</span>
+  <span class="ow">}</span>
+<span class="ow">};</span>
 
-<span class="n">println</span><span class="p">(</span><span class="nb">sum</span><span class="p">((</span><span class="n">i</span><span class="p">:</span> <span class="n">Int</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="n">i</span> <span class="o">*</span> <span class="n">i</span> <span class="o">*</span> <span class="n">i</span> <span class="p">},</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">print_int</span><span class="ow">(</span><span class="n">sum</span><span class="ow">(</span><span class="n">i</span> <span class="ow">=&gt;</span> <span class="ow">{</span> <span class="n">i</span> <span class="ow">*</span> <span class="n">i</span> <span class="ow">*</span> <span class="n">i</span> <span class="ow">},</span> <span class="mi">3</span><span class="ow">,</span> <span class="mi">5</span><span class="ow">));</span>
+<span class="n">print_newline</span><span class="bp">()</span><span class="ow">;</span>
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>216
-</pre></div>
-</div>
-<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="output text_plain highlight-none notranslate"><div class="highlight"><pre><span></span>defined function sum
-</pre></div>
-</div>
-</div>
-</div>
-<p><strong>REWRITE THIS SECTION</strong></p>
 <p>Note that we define the function <em>sum</em> in ReasonML by binding
 a function value to the name <em>sum</em>, just as we can bind other
 types of values to identifiers. The keyword “rec” after the “let”
@@ -722,7 +548,7 @@ refer to an operator as a function value, just put the operator in parentheses:
 can also be written as <code class="docutils literal notranslate"><span class="pre">(+)(a,</span> <span class="pre">(*)(b,</span> <span class="pre">c))</span></code> (note that this takes into account
 the usual higher precedence of multiplication over addition).
 For example, if we wanted to define an exponentiation operator on <em>int</em>, and
-call it <code class="docutils literal notranslate"><span class="pre">***</span></code>, we could define it as follows:<a class="footnote-reference brackets" href="#id5" id="id4">5</a></p>
+call it <code class="docutils literal notranslate"><span class="pre">***</span></code>, we could define it as follows:<a class="footnote-reference brackets" href="#id2" id="id1">1</a></p>
 <div class="highlight-reason notranslate"><div class="highlight"><pre><span></span><span class="k">let</span> <span class="k">rec</span> <span class="ow">(***)</span> <span class="ow">=</span> <span class="ow">(</span><span class="n">n</span><span class="ow">,</span> <span class="n">p</span><span class="ow">)</span> <span class="ow">=&gt;</span> <span class="ow">{</span>
   <span class="k">if</span> <span class="ow">(</span><span class="n">p</span> <span class="ow">==</span> <span class="mi">0</span><span class="ow">)</span> <span class="ow">{</span>
     <span class="mi">1</span>
@@ -833,31 +659,7 @@ variables <code class="docutils literal notranslate"><span class="pre">a</span><
 </ul>
 <hr class="docutils" />
 <dl class="footnote brackets">
-<dt class="label" id="io"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>The most common exception is for functions that send
-output to the console, such as the <code class="docutils literal notranslate"><span class="pre">print_int</span></code> function in ReasonML.
-Being able to track execution and easily display results is very
-useful, and printing a line on the console is a fairly benign
-side-effect—it won’t cause the function to return different
-values for the same arguments. However, printing a result can still
-interfere with algebraic reasoning about a program, because interchanging
-such a function call with its value can affect whether and how many times
-the output is printed.</p>
-</dd>
-<dt class="label" id="int"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
-<dd><p>For our purposes we may ignore the distinction between <em>int</em> and <em>Integer</em> in Java.</p>
-</dd>
-<dt class="label" id="lambda"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
-<dd><p>The mathematician Alonzo Church introduced in
-the 1930’s the use of the Greek letter lambda (<span class="math notranslate nohighlight">\(\lambda\)</span>) to indicate an
-otherwise unnamed function defined by a formula. That is, instead
-of writing “the function <span class="math notranslate nohighlight">\(f\)</span> where <span class="math notranslate nohighlight">\(f(x) = \textit{some formula}\)</span>”,
-he wrote “<span class="math notranslate nohighlight">\(\lambda x(\textit{some formula})\)</span>”. When the first
-functional programming language, LISP (invented in the late 1950’s),
-needed a way to create function values, John McCarthy adopted Church’s
-use of lambda, and the name has stuck.</p>
-</dd>
-<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id4">5</a></span></dt>
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p>The code here is based on the solution to an exercise in the <a class="reference internal" href="../logic/recursion.html"><span class="doc std std-doc">Recursion</span></a> section.]</p>
 </dd>
 </dl>
@@ -873,16 +675,16 @@ use of lambda, and the name has stuck.</p>
         },
         codeMirrorConfig: {
             theme: "abcdef",
-            mode: "scala"
+            mode: "python"
         },
         kernelOptions: {
-            kernelName: "scala",
+            kernelName: "python3",
             path: "./fp"
         },
         predefinedOutput: true
     }
     </script>
-    <script>kernelName = 'scala'</script>
+    <script>kernelName = 'python3'</script>
 
               </div>
               
@@ -892,8 +694,6 @@ use of lambda, and the name has stuck.</p>
     
     <div class='prev-next-bottom'>
         
-    <a class='left-prev' id="prev-link" href="index.html" title="previous page">Functional Programming</a>
-    <a class='right-next' id="next-link" href="types.html" title="next page">Types in Functional Programming</a>
 
     </div>
     <footer class="footer mt-5 mt-md-0">
