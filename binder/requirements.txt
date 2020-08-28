@@ -1,4 +1,4 @@
 jupyterlab>=2.1
 matplotlib==3.*
 ipywidgets>=7.5
-jupytext
+jupytext[myst]
