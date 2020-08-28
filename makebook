@@ -1,4 +1,4 @@
 #!/bin/bash
-./coursier launch --fork almond:0.10.7-SNAPSHOT --scala 2.13.3 -- --install --force --predef-code "interp.colors() = ammonite.util.Colors.BlackWhite"
+./coursier launch --fork almond:0.10.6 --scala 2.13.3 -- --install --force --predef-code "interp.colors() = ammonite.util.Colors.BlackWhite"
 jb clean book
 jb build book

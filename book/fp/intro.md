@@ -188,7 +188,7 @@ block (such as a function body) containing it is finished:
 
 A variable may be temporarily **shadowed** by another variable with the same
 name. This may look like an assignment of a changed value to a variable,
-but each use of the `let` statement will create a new named location in
+but each use of the `val` statement will create a new named location in
 memory; if the shadowing variable goes away, the original one will become
 visible again with its correct value:
 
