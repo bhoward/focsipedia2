@@ -24,6 +24,7 @@ In a separate terminal, start sbt, compile main, and run docs/mdoc:
 $ sbt
 ...
 > main/compile
+> docs/mdoc
 > docs/mdoc --watch
 ```
 
