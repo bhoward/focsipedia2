@@ -1,8 +1,0 @@
-{
-  "java.project.sourcePaths": [
-    "code/java"
-  ],
-  "files.watcherExclude": {
-    "**/target": true
-  }
-}
