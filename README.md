@@ -18,11 +18,12 @@ $ yarn start
 
 This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
-In a separate terminal, start sbt and run docs/mdoc:
+In a separate terminal, start sbt, compile main, and run docs/mdoc:
 
 ```
 $ sbt
 ...
+> main/compile
 > docs/mdoc --watch
 ```
 

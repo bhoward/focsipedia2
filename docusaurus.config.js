@@ -32,12 +32,12 @@ const config = {
   url: 'https://bhoward.github.io/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/focsipedia/',
+  baseUrl: '/focsipedia2/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'bhoward', // Usually your GitHub org/user name.
-  projectName: 'focsipedia', // Usually your repo name.
+  projectName: 'focsipedia2', // Usually your repo name.
 
   onBrokenLinks: 'warn', // was 'throw'
   onBrokenMarkdownLinks: 'warn',
@@ -61,7 +61,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/bhoward/focsipedia/tree/master/',
+            'https://github.com/bhoward/focsipedia2/tree/main/',
           remarkPlugins: [remarkMath, [remarkCodeImport, codeImportOptions]],
           rehypePlugins: [[rehypeKatex, katexOptions], rehypeGraphviz],
         },
@@ -70,7 +70,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/bhoward/focsipedia/tree/master/',
+            'https://github.com/bhoward/focsipedia2/tree/main/',
             remarkPlugins: [remarkMath, [remarkCodeImport, codeImportOptions]],
             rehypePlugins: [[rehypeKatex, katexOptions], rehypeGraphviz],
           },
@@ -110,7 +110,7 @@ const config = {
           {to: '/docs/236topics', label: 'Topics', position: 'left'},
           // {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/bhoward/focsipedia/',
+            href: 'https://github.com/bhoward/focsipedia2/',
             label: 'GitHub',
             position: 'right',
           },
@@ -141,7 +141,7 @@ const config = {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/bhoward/focsipedia/',
+                href: 'https://github.com/bhoward/focsipedia2/',
               },
             ],
           },
