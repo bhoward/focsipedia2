@@ -1,3 +1,0 @@
-#!/bin/bash
-./coursier launch --fork almond:0.10.6 --scala 2.13.3 -- --install --force
-jupyter lab
