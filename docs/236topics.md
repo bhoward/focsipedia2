@@ -22,7 +22,7 @@ Note that it does not precisely follow the order in the book's table of contents
 
 ### [Functional Sorting](ds/lists.md)
 
-### [Program Verification](ds/verification.md)
+### [Program Verification](ds/verification.md) **TODO**
 
 ### [Tree Traversals](ds/trees.md)
 
