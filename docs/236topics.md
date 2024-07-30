@@ -18,11 +18,11 @@ Note that it does not precisely follow the order in the book's table of contents
 ### [Functional Graphics](fp/doodle.md)
 
 ## Week 2:
+### [MapReduce](fp/map-reduce.md)
+
 ### [Functional Sorting](ds/lists.md)
 
 ### [Program Verification](ds/verification.md)
-
-### [MapReduce](fp/map-reduce.md)
 
 ### [Tree Traversals](ds/trees.md)
 

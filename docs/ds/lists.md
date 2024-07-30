@@ -10,75 +10,72 @@ The focus here will be on functional approaches to sorting lists; for simplicity
 
 One of the simplest methods for sorting a list is based on the `insert` function, which adds one element in the correct position within an already sorted list.
 Suppose that `nums` is a (possibly empty) list of numbers, arranged in non-decreasing order, and we wish to insert the number `n`.
-If `nums` is empty, then the result will just be the list `[n]`; otherwise, split the list into a `head` element (which must be the smallest) and a `tail` list.
+If `nums` is empty, then the result will just be the list `List(n)`; otherwise, split the list into a `head` element (which must be the smallest) and a `tail` list.
 If `n` is no larger than `head`, then `n` will be the smallest number overall, and we may insert it in front of `head`.
 On the other hand, if `n` is larger than `head`, then `head` is still the smallest and must come first, while `n` must be inserted somewhere in the `tail`.
 However, inserting `n` into the `tail` is the same problem we started with (insert a number into a sorted list), except the list is smaller&mdash;this is exactly the setup we need to make a recursive call to finish the job.
 
 In code, here is the procedure we just described:
-```reason edit
+```scala mdoc
 /* Precondition: nums is sorted in non-decreasing order */
-let rec insert = (nums, n) => {
-  switch (nums) {
-  | [] => [n]
-  | [head, ...tail] =>
-    if (n <= head) {
-      [n, ...nums]
-    } else {
-      [head, ...insert(tail, n)]
-    }
-  }
-};
+def insert(nums: List[Int], n: Int): List[Int] = {
+  nums match
+    case Nil => List(n)
+    case head :: tail =>
+      if n <= head then
+        n :: nums
+      else
+        head :: insert(tail, n)
+}
 
-insert([], 42);
-insert([63], 42);
-insert([17, 63], 42);
-insert([17, 39], 42);
+insert(List(), 42)
+insert(List(63), 42)
+insert(List(17, 63), 42)
+insert(List(17, 39), 42)
 ```
 
 Once we have the `insert` function, it is easy to build a sorting function based on it.
 If we want to sort an empty list, then we are done.
 Otherwise, we have a non-empty list that may be split (using pattern matching) into a head and a tail.
 Recursively sorting the tail will give us a sorted list, and then we just need to insert the head into it:
-```reason edit
-let rec insertion_sort = nums => {
-  switch (nums) {
-  | [] => []
-  | [head, ...tail] => insert(insertion_sort(tail), head)
-  }
-};
+```scala mdoc
+def insertion_sort(nums: List[Int]): List[Int] = {
+  nums match
+    case Nil => Nil
+    case head :: tail => insert(insertion_sort(tail), head)
+}
 
-insertion_sort([3, 1, 4, 1, 5, 9, 2, 6, 5]);
+insertion_sort(List(3, 1, 4, 1, 5, 9, 2, 6, 5))
 ```
 Although this is simple, the call to `insertion_sort` is not a tail-recursive call&mdash;that is, the recursive call is not the last thing done, because it still needs to call `insert` after the recursion finishes.
 That can cause problems when the list is large, because each recursive call needs to be saved on the function-call stack and we run the danger of overflowing the stack.
 
 Another approach is to traverse the list from left to right, building up a sorted list by inserting each successive element (thus the sorted list is an **accumulator**&mdash;an extra argument that collects the result as the calculation proceeds; this is a common trick when making a function tail-recursive).
 Because the last action of the `aux` function in the recursive case is to call itself, this solution is properly tail-recursive[^1]
-and the ReasonML compiler will be able to produce code that doesn't overflow the stack no matter how many numbers we are sorting.[^2]
-```reason edit
-let insertion_sort_left = nums => {
-  let rec aux = (sorted, nums) => {
-    switch (nums) {
-    | [] => sorted
-    | [head, ...tail] => aux(insert(sorted, head), tail)
-    }
-  };
-  aux([], nums)
-};
+and the Scala compiler will be able to produce code that doesn't overflow the stack no matter how many numbers we are sorting.[^2]
+```scala mdoc
+def insertion_sort_left(nums: List[Int]): List[Int] = {
+  @scala.annotation.tailrec
+  def aux(sorted: List[Int], nums: List[Int]): List[Int] = {
+    nums match
+      case Nil => sorted
+      case head :: tail => aux(insert(sorted, head), tail)
+  }
+  aux(Nil, nums)
+}
 
-insertion_sort_left([3, 1, 4, 1, 5, 9, 2, 6, 5]);
+insertion_sort_left(List(3, 1, 4, 1, 5, 9, 2, 6, 5))
 ```
 Note that the helper function here (`aux`) is essentially the same as the `reduce` function we saw in the [MapReduce](../fp/map-reduce.md) section.
-The ReasonML standard library provides the `reduce` function under the name `List.fold_left`, so we can also define insertion sort as:
-```reason edit
-let insertion_sort_left2 = nums => {
-  List.fold_left(insert, [], nums)
-};
+The Scala standard library provides the `reduce` in the form of a `foldLeft` method on lists,
+so we can also define insertion sort as:
+```scala mdoc
+def insertion_sort_left2(nums: List[Int]): List[Int] = {
+  nums.foldLeft(Nil)(insert)
+}
 
-insertion_sort_left2([3, 1, 4, 1, 5, 9, 2, 6, 5]);
+insertion_sort_left2(List(3, 1, 4, 1, 5, 9, 2, 6, 5))
 ```
-Using currying, we can simplify this to `let insertion_sort_left2 = List.fold_left(insert, [])`.
 
 [^1]: Well, it would be if we also modified the `insert` function itself to be tail-recursive; this is left as an exercise.
 
@@ -93,71 +90,65 @@ So, our first goal is to write a `select` function that takes a non-empty list a
 We may approach this using recursion: to find the smallest element in the list, first find the smallest element in the tail of the list (if any), then compare it against the head and keep the smaller of the two.
 The result should be a pair of the smallest element plus a list of all of the other elements.
 This leads to the following code:
-```reason edit
+```scala mdoc
 /* Precondition: nums is non-empty */
-let rec select = nums => {
-  switch (nums) {
-  | [n] => (n, [])
-  | [head, ...tail] => {
+def select(nums: List[Int]): (Int, List[Int]) = {
+  nums match
+    case n :: Nil => (n, Nil)
+    case head :: tail =>
       /* We know that tail is non-empty */
-      let (small, rest) = select(tail);
-      if (head <= small) {
+      val (small, rest) = select(tail)
+      if head <= small then
         (head, tail)
-      } else {
-        (small, [head, ...rest])
-      }
-    }
-  }
-};
+      else
+        (small, head :: rest)
+}
 
-select([42]);
-select([3, 1, 4, 1, 5, 9, 2, 6, 5]);
+select(List(42))
+select(List(3, 1, 4, 1, 5, 9, 2, 6, 5))
 ```
 Note that it only makes sense to call `select` on a non-empty list, so we must make sure that we satisfy that precondition when making the recursive call.
-ReasonML warns us that we are not handling all of the cases with our patterns, but we may ignore the warning here.
+Scala warns us that we are not handling all of the cases with our patterns, but we may ignore the warning here.
 
 The `select` function is not tail-recursive, so again we might look for an alternate way to compute it using an accumulator and a helper function.
 Think of the usual process of searching a list for the smallest element: choose the first element as our initial guess, and then examine each of the rest of the numbers, refining our guess whenever we find a smaller element.
 If our accumulator is the pair consisting of the smallest element seen so far (our current guess), plus a list of all of the other numbers examined, then we can view the selection process as a left-to-right reduction:
-```reason edit
+```scala mdoc
 /* Precondition: nums is non-empty */
-let select_left = nums => {
-  let rec aux = (nums, accum) => {
-    switch (nums) {
-    | [] => accum
-    | [head, ...tail] => {
-        let (small, rest) = accum;
-        if (head < small) {
-          aux(tail, (head, [small, ...rest]))
-        } else {
-          aux(tail, (small, [head, ...rest]))
-        }
-      }
-    }
-  };
-  
-  switch (nums) {
-  | [head, ...tail] => aux(tail, (head, []))
-  }
-};
+def select_left(nums: List[Int]): (Int, List[Int]) = {
+  type Accum = (Int, List[Int])
 
-select_left([42]);
-select_left([3, 1, 4, 1, 5, 9, 2, 6, 5]);
+  @scala.annotation.tailrec
+  def aux(nums: List[Int], accum: Accum): Accum = {
+    nums match
+      case Nil => accum
+      case head :: tail =>
+        val (small, rest) = accum
+        if head < small then
+          aux(tail, (head, small :: rest))
+        else
+          aux(tail, (small, head :: rest))
+  }
+  
+  nums match
+    case head :: tail => aux(tail, (head, Nil))
+}
+
+select_left(List(42))
+select_left(List(3, 1, 4, 1, 5, 9, 2, 6, 5))
 ```
 
 Once we have a selection function, the selection sort is easy to write recursively:
-```reason edit
-let rec selection_sort = nums => {
-  switch (nums) {
-  | [] => []
-  | _ => {
-      let (small, rest) = select(nums);
-      [small, ...selection_sort(rest)]
-    }
-  }
-};
+```scala mdoc
+def selection_sort(nums: List[Int]): List[Int] = {
+  nums match
+    case Nil => Nil
+    case _ =>
+      val (small, rest) = select(nums)
+      small :: selection_sort(rest)
+}
 
-selection_sort([3, 1, 4, 1, 5, 9, 2, 6, 5]);
+selection_sort(List(3, 1, 4, 1, 5, 9, 2, 6, 5))
 ```
 One of the exercises asks you to find a way to write this using tail-recursion.
 
@@ -179,22 +170,20 @@ If we are merging two sorted lists, each of size $N$, then the total time taken 
 Of course, we still need to sort each of the lists being merged, but since these are each only half the size of the total collection of elements we can treat that as a smaller problem to be solved recursively.
 
 First, here is a recursive `merge` function:
-```reason edit
+```scala mdoc
 /* Precondition: nums1 and nums2 are both sorted in increasing order */
-let rec merge = (nums1, nums2) => {
-  switch (nums1, nums2) {
-  | ([], _) => nums2
-  | (_, []) => nums1
-  | ([head1, ...tail1], [head2, ...tail2]) =>
-    if (head1 <= head2) {
-      [head1, ...merge(tail1, nums2)]
-    } else {
-      [head2, ...merge(nums1, tail2)]
-    }
-  }
-};
+def merge(nums1: List[Int], nums2: List[Int]): List[Int] = {
+  (nums1, nums2) match
+    case (Nil, _) => nums2
+    case (_, Nil) => nums1
+    case (head1 :: tail1, head2 :: tail2) =>
+      if head1 <= head2 then
+        head1 :: merge(tail1, nums2)
+      else
+        head2 :: merge(nums1, tail2)
+}
 
-merge([2, 3, 5, 7], [1, 2, 4, 8]);
+merge(List(2, 3, 5, 7), List(1, 2, 4, 8))
 ```
 In words, if either list is empty, then the result is the other list. Otherwise, look at the heads of each list; the resulting merged list will start with the smaller of the two heads, followed by a merge of the tail following the smaller head with the entire other list.
 (As a challenge, see if you can write a tail-recursive version of `merge`; as a hint, you might want to make use of the `reverse` function discussed in the section on [accumulators](../fp/map-reduce.md#accumulators)).
@@ -202,35 +191,39 @@ In words, if either list is empty, then the result is the other list. Otherwise,
 The first part of the merge sort algorithm is to split the input list into two halves (provided there is more than one element), then recursively sort the halves to prepare for merging.
 One way to split a list into halves is to calculate the size of the list, then count off the first half of them into one list and the rest into another (an exercise below asks you to implement this).
 However, because we do not care about the order of the incoming data, a more efficient approach is to walk through the list, alternately putting elements into one or the other of the halves (which are built up in an accumulator containing a pair of lists):
-```reason edit
-let split = nums => {
-  let rec aux = (nums, (left, right)) => {
-    switch (nums) {
-    | [] => (left, right)
-    | [head, ...tail] => aux(tail, (right, [head, ...left]))
-    }
-  }
-  aux(nums, ([], []))
-};
+```scala mdoc
+def split(nums: List[Int]): (List[Int], List[Int]) = {
+  type Accum = (List[Int], List[Int])
 
-split([]);
-split([1]);
-split([1, 2]);
-split([1, 2, 3]);
-split([1, 2, 3, 4]);
+  @scala.annotation.tailrec
+  def aux(nums: List[Int], accum: Accum): Accum = {
+    nums match
+      case Nil => accum
+      case head :: tail =>
+        val (left, right) = accum
+        aux(tail, (right, head :: left))
+  }
+
+  aux(nums, (Nil, Nil))
+}
+
+split(List())
+split(List(1))
+split(List(1, 2))
+split(List(1, 2, 3))
+split(List(1, 2, 3, 4))
 ```
 
 Putting the pieces together then, we get the following `merge_sort` function:
-```reason edit
-let rec merge_sort = nums => {
-  let (left, right) = split(nums);
-  switch (left) { /* base case if left is empty */
-  | [] => nums
-  | _ => merge(merge_sort(left), merge_sort(right))
-  }
-};
+```scala mdoc
+def merge_sort(nums: List[Int]): List[Int] = {
+  val (left, right) = split(nums)
+  left match /* base case if left is empty */
+    case Nil => nums
+    case _ => merge(merge_sort(left), merge_sort(right))
+}
 
-merge_sort([3, 1, 4, 1, 5, 9, 2, 6, 5]);
+merge_sort(List(3, 1, 4, 1, 5, 9, 2, 6, 5))
 ```
 Note that `merge_sort` makes two recursive calls to itself, so there is no easy way to make it entirely tail-recursive.
 This is not a problem, though, because we know that the number of times that a list of $N$ elements can be split in two before hitting the base case is just $\log_2 N$;
@@ -257,28 +250,26 @@ The easiest way to ensure this is to choose a **pivot** element: elements less t
 Elements that are equal to the pivot may go in either part.
 A simple (and not very good&hellip;) choice for the pivot is the first element of the list; after using it to partition the rest of the list into two parts, we recursively sort those parts and then append them back together with the pivot element in between.
 
-We may use the standard library function `List.filter` to do the partitioning:
-```reason edit
-let partition = (pivot, nums) => {
-  (List.filter(n => n < pivot, nums), List.filter(n => n >= pivot, nums))
-};
+We may use the standard library method `filter` to do the partitioning:
+```scala mdoc
+def partition(pivot: Int, nums: List[Int]): (List[Int], List[Int]) = {
+  (nums.filter(n => n < pivot), nums.filter(n => n >= pivot))
+}
 
-partition(3, [1, 4, 1, 5, 9, 2, 6, 5]);
+partition(3, List(1, 4, 1, 5, 9, 2, 6, 5))
 ```
 
-Now the quicksort function is very easy (making use of the ReasonML list append operator, `@`):
-```reason edit
-let rec quicksort = nums => {
-  switch (nums) {
-  | [] => []
-  | [pivot, ...rest] => {
-      let (first, second) = partition(pivot, rest);
-      quicksort(first) @ [pivot] @ quicksort(second)
-    }
-  }
-};
+Now the quicksort function is very easy (making use of the Scala list concatenate operator, `:::`):
+```scala mdoc
+def quicksort(nums: List[Int]): List[Int] = {
+  nums match
+    case Nil => Nil
+    case pivot :: rest => 
+      val (first, second) = partition(pivot, rest)
+      quicksort(first) ::: List(pivot) ::: quicksort(second)
+}
 
-quicksort([3, 1, 4, 1, 5, 9, 2, 6, 5]);
+quicksort(List(3, 1, 4, 1, 5, 9, 2, 6, 5))
 ```
 
 The analysis of Quicksort is somewhat more difficult that the other sorts, however, because we do not know the sizes of the two parts that `partition` will give us.
@@ -307,65 +298,66 @@ It is possible to show that, with a better way to choose the pivot, the quadrati
   Any list sorted in reverse order will do.
 </details>
 
-3. Rewrite the `select_left` function as an application of `List.fold_left` to an appropriate reduction function. When `select_left(nums)` is called on a non-empty list `nums`, the initial value passed into the reduction should be the pair `(head, [])`, representing the initial guess that the head of `nums` is the smallest number, with an empty list of other numbers examined so far.
+3. Rewrite the `select_left` function as an application of the `foldLeft` method to an appropriate reduction function. When `select_left(nums)` is called on a non-empty list `nums`, the initial value passed into the reduction should be the pair `(head, Nil)`, representing the initial guess that the head of `nums` is the smallest number, with an empty list of other numbers examined so far.
 <details>
   <summary>Answer</summary>
 
-  ```reason
-  let select_left2 = nums => {
-    let aux = ((small, rest), n) => {
-      if (n < small) {
-        (n, [small, ...rest])
-      } else {
-        (small, [n, ...rest])
-      }
-    };
-    switch (nums) {
-    | [head, ...tail] => List.fold_left(aux, (head, []), tail)
-    }
-  };
-  ```
+```scala
+def select_left2(nums: List[Int]): (Int, List[Int]) = {
+  type Accum = (Int, List[Int])
+
+  def aux(accum: Accum, n: Int): Accum = {
+    val (small, rest) = accum
+    if n < small then
+      (n, small :: rest)
+    else
+      (small, n :: rest)
+  }
+
+  nums match
+    case head :: tail => tail.foldLeft((head, Nil))(aux)
+}
+```
 </details>
 
 4. Find a way to write the selection sort algorithm using only tail-recursive functions. *Hint: Instead of selecting the smallest element, modify `select_left` to separate out the largest element, then write a sorting function that accumulates the sorted list from back to front.*
 <details>
   <summary>Answer</summary>
 
-  ```reason
-  /* Precondition: nums is non-empty */
-  let select_max_left = nums => {
-    let rec aux = (nums, accum) => {
-      switch (nums) {
-      | [] => accum
-      | [head, ...tail] => {
-          let (large, rest) = accum;
-          if (head > large) {
-            aux(tail, (head, [large, ...rest]))
-          } else {
-            aux(tail, (large, [head, ...rest]))
-          }
-        }
-      }
-    };
-    
-    switch (nums) {
-    | [head, ...tail] => aux(tail, (head, []))
-    }
-  };
+```scala
+/* Precondition: nums is non-empty */
+def select_max_left(nums: List[Int]): (Int, List[Int]) = {
+  type Accum = (Int, List[Int])
+
+  @scala.annotation.tailrec
+  def aux(nums: List[Int], accum: Accum): Accum = {
+    nums match
+      case Nil => accum
+      case head :: tail =>
+        val (large, rest) = accum
+        if head > large then
+          aux(tail, (head, large :: rest))
+        else
+          aux(tail, (large, head :: rest))
+  }
   
-  let ssort = nums => {
-    let rec aux = (nums, sorted) => {
-    	switch (nums) {
-      | [] => sorted
-      | _ => {
-        	let (large, rest) = select_max_left(nums);
-  				aux(rest, [large, ...sorted])
-  		  }
-    	}
-  	};
-    aux(nums, [])
-  };
-  ```
+  nums match
+    case head :: tail => aux(tail, (head, Nil))
+}
+
+def ssort(nums: List[Int]): List[Int] = {
+  @scala.annotation.tailrec
+  def aux(nums: List[Int], sorted: List[Int]): List[Int] = {
+    nums match
+      case Nil => sorted
+      case _ =>
+        val (large, rest) = select_max_left(nums)
+        aux(rest, large :: sorted)
+  }
+
+  aux(nums, Nil)
+}
+```
 </details>
 
 5. Find a way to implement the `insert` function using only tail-recursive functions.
@@ -375,75 +367,75 @@ in an accumulator; when the correct position is found for the number, use `rever
 <details>
   <summary>Answer</summary>
 
-  ```reason
-  let rec reverse_append = (a, b) => {
-    switch (a) {
-    | [] => b
-    | [head, ...tail] => reverse_append(tail, [head, ...b])
-    }
-  };
+```scala
+@scala.annotation.tailrec
+def reverse_append(a: List[Int], b: List[Int]): List[Int] = {
+  a match
+    case Nil => b
+    case head :: tail => reverse_append(tail, head :: b)
+}
 
-  /* Precondition: nums is sorted in non-decreasing order */
-  let insert_TR = (nums, n) => {
-    let rec aux = (sorted, acc) => {
-    	switch (sorted) {
-      | [] => reverse_append([n, ...acc], [])
-      | [head, ...tail] => if (n <= head) {
-          reverse_append(acc, [n, ...sorted])
-        } else {
-          aux(tail, [head, ...acc])
-        }
-      }
-    };
-    aux(nums, [])
-  };
-  ```
+/* Precondition: nums is sorted in non-decreasing order */
+def insert_TR(nums: List[Int], n: Int): List[Int] = {
+  @scala.annotation.tailrec
+  def aux(sorted: List[Int], acc: List[Int]): List[Int] = {
+    sorted match
+      case Nil => reverse_append(acc, List(n))
+      case head :: tail =>
+        if n <= head then
+          reverse_append(acc, n :: sorted)
+        else
+          aux(tail, head :: acc)
+  }
+
+  aux(nums, Nil)
+}
+```
 </details>
 
-1. Implement the merge sort `split` function by first computing the size of the list, then passing half that size to a function that takes a number, n, and a list and returns a pair with the first n elements of the list as the first component, and the rest of the list as the other component.
+6. Implement the merge sort `split` function by first computing the size of the list, then passing half that size to a function that takes a number, n, and a list and returns a pair with the first n elements of the list as the first component, and the rest of the list as the other component.
 <details>
   <summary>Answer</summary>
 
-  ```reason
-  let split = nums => {
-    let rec size = nums => {
-      switch (nums) {
-      | [] => 0
-      | [_, ...tail] => 1 + size(tail)
-      }
-    };
-    let rec aux = (n, nums) => {
-      switch (n, nums) {
-      | (0, _) => ([], nums)
-      | (_, []) => ([], [])
-      | (_, [head, ...tail]) => {
-          let (left, right) = aux(n - 1, tail);
-          ([head, ...left], right)
-        }
-      }
-    };
-    let n = size(nums) / 2;
-    aux(n, nums)
-  };
-  ```
+```scala
+def split2(nums: List[Int]): (List[Int], List[Int]) = {
+  def size(nums: List[Int]): Int = {
+    nums match
+      case Nil => 0
+      case _ :: tail => 1 + size(tail)
+  }
+
+  def aux(n: Int, nums: List[Int]): (List[Int], List[Int]) = {
+    (n, nums) match
+      case (0, _) => (Nil, nums)
+      case (_, Nil) => (Nil, Nil)
+      case (_, head :: tail) =>
+        val (left, right) = aux(n - 1, tail)
+        (head :: left, right)
+  }
+
+  val n = size(nums) / 2
+  aux(n, nums)
+}
+```
 </details>
 
-7. The `partition` implementation for Quicksort shown above makes two passes over the list, once for each call to `List.filter`. Write a version of `partition` that does the job in just one pass, accumulating a pair of the two parts as it traverses the list.
+7. The `partition` implementation for Quicksort shown above makes two passes over the list, once for each call to `filter`. Write a version of `partition` that does the job in just one pass, accumulating a pair of the two parts as it traverses the list.
 <details>
   <summary>Answer</summary>
 
-  ```reason
-  let partition = (pivot, nums) => {
-    List.fold_left(
-      ((first, second), n) =>
-        if (n < pivot) {
-          ([n, ...first], second)
-        } else {
-          (first, [n, ...second])
-        },
-      ([], []),
-      nums
-    )
-  };
-  ```
+```scala
+def partition2(pivot: Int, nums: List[Int]): (List[Int], List[Int]) = {
+  type Accum = (List[Int], List[Int])
+
+  nums.foldLeft((Nil, Nil))(
+    (accum: Accum, n: Int) =>
+      val (first, second) = accum
+      if n < pivot then
+        (n :: first, second)
+      else
+        (first, n :: second)
+  )
+}
+```
 </details>
