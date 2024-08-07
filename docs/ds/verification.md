@@ -62,11 +62,85 @@ have failed because of the bug, passing the enhanced suite in the future will no
 bug has been fixed (at least for that particular case), but also provides confidence that
 further changes to the code do not reintroduce old bugs.
 
-**TODO** include an example with ScalaTest or something similar?
+Here is an example (adapted from
+[this source](https://github.com/anshulxyz/algorithms-scala/blob/main/src/test/scala/example/InsertionSortSpec.scala))
+of using the [ScalaTest](https://www.scalatest.org) framework to test some cases
+of the `insertion_sort` function from [Sorting Lists](lists.md):
+```scala
+class InsertionSortSpec extends AnyFlatSpec with Matchers:
+  "Insertion Sort" should "sort a list of integers in ascending order" in {
+    val unsortedList = List(4, 6, 1, 3, 5)
+    val sortedList   = List(1, 3, 4, 5, 6)
+    insertion_sort(unsortedList) shouldEqual sortedList
+  }
+
+  it should "handle an empty list" in {
+    insertion_sort(Nil) shouldEqual Nil
+  }
+
+  it should "handle a list with a single element" in {
+    val singleElementList = List(42)
+    insertion_sort(singleElementList) shouldEqual singleElementList
+  }
+
+  it should "handle a list with duplicate elements" in {
+    val listWithDuplicates = List(3, 1, 4, 1, 5, 9, 2, 6, 5)
+    val sortedlist         = List(1, 1, 2, 3, 4, 5, 5, 6, 9)
+    insertion_sort(listWithDuplicates) shouldEqual sortedlist
+  }
+```
+
+The output when this is run with ScalaTest will look something like this:
+<pre>
+[info] <span style={{color:'green'}}>InsertionSortSpec:</span>
+[info] <span style={{color:'green'}}>Insertion Sort</span>
+[info] <span style={{color:'green'}}>- should sort a list of integers in ascending order</span>
+[info] <span style={{color:'green'}}>- should handle an empty list</span>
+[info] <span style={{color:'green'}}>- should handle a list with a single element</span>
+[info] <span style={{color:'green'}}>- should handle a list with duplicate elements</span>
+[info] <span style={{color:'teal'}}>Run completed in 220 milliseconds.</span>
+[info] <span style={{color:'teal'}}>Total number of tests run: 4</span>
+[info] <span style={{color:'teal'}}>Suites: completed 1, aborted 0</span>
+[info] <span style={{color:'teal'}}>Tests: succeeded 4, failed 0, canceled 0, ignored 0, pending 0</span>
+[info] <span style={{color:'green'}}>All tests passed.</span>
+</pre>
+
+Suppose we used this modified definition of `insert`, which does not retain duplicate elements:
+```scala
+def insert(nums: List[Int], n: Int): List[Int] = {
+  nums match
+    case Nil => List(n)
+    case head :: tail =>
+      if n < head then
+        n :: nums
+      else if n == head then
+        nums
+      else
+        head :: insert(tail, n)
+}
+```
+
+Then the output for the same test suite would change to:
+<pre>
+[info] <span style={{color:'green'}}>InsertionSortSpec:</span>
+[info] <span style={{color:'green'}}>Insertion Sort</span>
+[info] <span style={{color:'green'}}>- should sort a list of integers in ascending order</span>
+[info] <span style={{color:'green'}}>- should handle an empty list</span>
+[info] <span style={{color:'green'}}>- should handle a list with a single element</span>
+[info] <span style={{color:'red'}}>- should handle a list with duplicate elements &ast;&ast;&ast; FAILED &ast;&ast;&ast;</span>
+[info] <span style={{color:'red'}}>  List(1, 2, 3, 4, 5, 6, 9) did not equal List(1, 1, 2, 3, 4, 5, 5, 6, 9) (InsertionSortSpec.scala:23)</span>
+[info] <span style={{color:'red'}}>  Analysis:</span>
+[info] <span style={{color:'red'}}>  List(1: 2 -&gt; 1, 2: 3 -&gt; 2, 3: 4 -&gt; 3, 4: 5 -&gt; 4, 5: 6 -&gt; 5, 6: 9 -&gt; 5, 7: -&gt; 6, 8: -&gt; 9)</span>
+[info] <span style={{color:'teal'}}>Run completed in 246 milliseconds.</span>
+[info] <span style={{color:'teal'}}>Total number of tests run: 4</span>
+[info] <span style={{color:'teal'}}>Suites: completed 1, aborted 0</span>
+[info] <span style={{color:'teal'}}>Tests: succeeded 3, failed 1, canceled 0, ignored 0, pending 0</span>
+[info] <span style={{color:'red'}}>&ast;&ast;&ast; 1 TEST FAILED &ast;&ast;&ast;</span>
+</pre>
 
 ## Assertions
 
-As stated, an assertion is a boolean expression that must be `true` each time it is encountered
+As stated above, an assertion is a boolean expression that must be `true` each time it is encountered
 during program execution.
 For example, in the [Sorting Lists](lists.md) section, the `select` function used in selection
 sort requires that the input list be non-empty, and the `insert` function used in insertion sort
