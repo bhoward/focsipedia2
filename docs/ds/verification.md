@@ -294,8 +294,35 @@ In this run, ScalaCheck was able to shrink the failing case down to `List(0, 0)`
 
 ## Correctness Proofs
 
-**TODO** show some examples with Stainless
+In some cases it is possible to go further than just checking that properties hold for
+a sampling of values.
+If we can construct a logical proof which establishes that the desired postcondition
+follows from the precondition and the body of each function, then we will have an
+absolute guarantee that the code satisfies its specification.
 
+The compositional nature of functional programming really shines here, because it is
+_much_ easier to complete this sort of formal correctness proof when working with
+pure functions, where we do not have to worry about tracking the current state of mutable variables.
+With that said, all is not lost for imperative code, but we will need more powerful techniques
+(see for example [Hoare Logic](https://en.wikipedia.org/wiki/Hoare_logic)) to reason about state.
+
+The [Stainless](https://epfl-lara.github.io/stainless/) framework is one tool (another is
+[Sireum Logika](https://logika.sireum.org/)) for verifying the behavior of Scala programs.
+It works by extracting **verification conditions** (VCs) from a (subset of) Scala program that has
+been augmented with pre- and postconditions as we saw in the [Assertions](#assertions) section
+(except for technical reasons we use `require` instead of `assert` for the precondition).
+Stainless also generates VCs for Scala features such as pattern matching, to ensure that there
+are cases to cover all of the possible values; it also generates conditions that assert that
+the program will terminate and not loop forever&mdash;this is a stronger statement: not only will
+it not produce an incorrect result, it will actually produce a correct result!
+It then hands these VCs over to an automated theorem prover (by default, the
+[Z3](https://en.wikipedia.org/wiki/Z3_Theorem_Prover) prover from Microsoft) and attempts to
+find a proof using techniques such as [induction](../logic/induction.md).
+
+Here is an example of our insertion sort code with appropriate pre- and postconditions
+(the code is slightly different, mostly around the pattern-matching on lists, because
+Stainless relies on its own library of basic data types which already have a large number
+of useful properties established):
 ```scala
 def insert(nums: List[Int], n: Int): List[Int] = {
   require(isSorted(nums))
@@ -324,6 +351,8 @@ def insertion_sort(nums: List[Int]): List[Int] = {
 )
 ```
 
+Running this through Stainless leads to sucessfully generating proofs of 17 verification conditions,
+establishing that the code will correctly sort any possible list of ints.
 <pre>
 [<span style={{color:'blue'}}>  Info  </span>]   ┌───────────────────┐
 [<span style={{color:'blue'}}>  Info  </span>] ╔═╡ <span style={{color:'green'}}>stainless summary</span> ╞═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
@@ -350,4 +379,11 @@ def insertion_sort(nums: List[Int]): List[Int] = {
 [<span style={{color:'blue'}}>  Info  </span>] ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
 </pre>
 
-Discuss Hoare Logic?
+We are still limited by the detail of our specification.
+For example, we have not specified anything here about the running time or stack depth needed for this code;
+indeed, we know that this particular example will crash with a stack overflow if the list is too long,
+because it is not written in tail-recursive style.
+
+## Exercises
+
+TBD
