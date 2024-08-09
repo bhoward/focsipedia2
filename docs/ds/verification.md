@@ -51,6 +51,7 @@ More details and examples of testing, assertions, properties, and correctness pr
 The tests in a test suite can be on the level of individual functions to be tested in isolation
 (**unit testing**), or they can be
 at the level of a full program with inputs and outputs as seen by a user (**integration testing**).
+In the following, we will only be looking at examples of unit testing.
 Frequently the running of the test suite will be automated, so that the programmer will get
 feedback after every change to know whether any of the test cases fail.
 
@@ -177,7 +178,7 @@ def insertion_sort(nums: List[Int]): List[Int] = {
     case Nil => Nil
     case head :: tail => insert(insertion_sort(tail), head)
 } ensuring (result =>
-    isSorted(result)
+  isSorted(result)
 )
 ```
 Note that the argument to `ensuring` is an anonymous function value that will be applied to the
@@ -223,10 +224,130 @@ can be generated where the `assert` statements have been removed.
 
 ## Property Testing
 
-**TODO** show some examples with ScalaCheck or something like it
+By combining testing with properties, we can have the best features of both.
+**Property-based testing** lets us specify general properties that need to hold,
+but instead of checking them at runtime with assertions (which we do **not** want to
+do in production) we test them in advance by running a tool that will generate a
+large number of "random" cases and checking each of the properties.
+In effect, this automates the process of generating unit tests.
+
+The property testing tool knows the types of the data being tested, and can
+generate a suitable range of "arbitrary" values.
+A typical tool is [ScalaCheck](https://scalacheck.org/), which has built-in
+generators for primitive types and standard collections; in addition to randomly
+generated values, it will also try common edge cases (such as `Int.MaxValue` and
+the empty list).
+For custom data types, such as trees, it provides facilities to define new generators.
+
+Here is an example of some properties written in ScalaCheck that will test the
+behavior of our insertion sort function.
+These properties are written in the form `forAll {(a: T) => P(a)}`, which is the
+signal to ScalaCheck that it should generate arbitrary values `a` of type `T`
+(by default, it generates 100 of them), and check whether the boolean expression
+`P(a)` is `true`.[^1]
+```scala
+object InsertionSortPropSpec extends Properties("Insertion Sort") {
+  import Prop.forAll
+
+  property("same length") = forAll { (a: List[Int]) =>
+    a.length == insertion_sort(a).length
+  }
+
+  property("sorted") = forAll { (a: List[Int]) =>
+    isSorted(insertion_sort(a))
+  }
+
+  property("same elements") = forAll { (a: List[Int]) =>
+    val aSorted = insertion_sort(a)
+    a.forall(x => aSorted contains x) && aSorted.forall(x => a contains x)
+  }
+}
+```
+
+[^1]: Note that the ScalaCheck `forAll` function is different from the method
+`forall` defined on lists in Scala (and used in the "same elements" property),
+which maps a predicate over all of the elements of the given list and then
+"ands" the results together.
+
+When run with ScalaCheck, the output from this will be
+```
++ Insertion Sort.same length: OK, passed 100 tests.
++ Insertion Sort.sorted: OK, passed 100 tests.
++ Insertion Sort.same elements: OK, passed 100 tests.
+```
+
+If we run it on the faulty version of insertion sort that discards duplicates, the output
+might instead be
+```
+! Insertion Sort.same length: Falsified after 5 passed tests.
+> ARG_0: List("0", "0")
+> ARG_0_ORIGINAL: List("0", "2147483647", "-30181727", "0")
++ Insertion Sort.sorted: OK, passed 100 tests.
++ Insertion Sort.same elements: OK, passed 100 tests.
+Found 1 failing properties.
+```
+Note that it first found a failing input: `List(0, 2147483647, -30181727, 0)`.
+A common ability of property-based testers is that once a failing case is found,
+it will then attempt to generate simpler related cases until it finds a
+minimal counterexample.
+In this run, ScalaCheck was able to shrink the failing case down to `List(0, 0)`.
 
 ## Correctness Proofs
 
 **TODO** show some examples with Stainless
+
+```scala
+def insert(nums: List[Int], n: Int): List[Int] = {
+  require(isSorted(nums))
+
+  nums match 
+    case Nil() => List(n)
+    case Cons(head, tail) =>
+      if n <= head then
+        n :: nums
+      else
+        head :: insert(tail, n)
+} ensuring (result =>
+  isSorted(result) &&
+  result.content == nums.content + n &&
+  result.size == nums.size + 1
+)
+
+def insertion_sort(nums: List[Int]): List[Int] = {
+  nums match 
+    case Nil() => Nil()
+    case Cons(head, tail) => insert(insertion_sort(tail), head)
+} ensuring (result =>
+  isSorted(result) &&
+  result.content == nums.content &&
+  result.size == nums.size
+)
+```
+
+<pre>
+[<span style={{color:'blue'}}>  Info  </span>]   ┌───────────────────┐
+[<span style={{color:'blue'}}>  Info  </span>] ╔═╡ <span style={{color:'green'}}>stainless summary</span> ╞═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+[<span style={{color:'blue'}}>  Info  </span>] ║ └───────────────────┘                                                                                                                                 ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:10:7: </span>   <span style={{color:'green'}}>insert</span>          <span style={{color:'green'}}>non-negative measure</span>                                      <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.1</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:13:5: </span>   <span style={{color:'green'}}>insert</span>          <span style={{color:'green'}}>body assertion: match exhaustiveness</span>                      <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.0</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:13:5: </span>   <span style={{color:'green'}}>insert</span>          <span style={{color:'green'}}>postcondition</span>                                             <span style={{color:'green'}}>valid from cache</span>  <span style={{color:'green'}}></span>          <span style={{color:'green'}}>0.0</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:14:26: </span>  <span style={{color:'green'}}>insert</span>          <span style={{color:'green'}}>postcondition</span>                                             <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.1</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:17:11: </span>  <span style={{color:'green'}}>insert</span>          <span style={{color:'green'}}>postcondition</span>                                             <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.1</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:19:11: </span>  <span style={{color:'green'}}>insert</span>          <span style={{color:'green'}}>postcondition</span>                                             <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.2</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:19:19: </span>  <span style={{color:'green'}}>insert</span>          <span style={{color:'green'}}>measure decreases</span>                                         <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.1</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:19:19: </span>  <span style={{color:'green'}}>insert</span>          <span style={{color:'green'}}>precond. (call insert((scrut.t): @DropVCs , n))</span>           <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.0</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:26:7: </span>   <span style={{color:'green'}}>insertion_sort</span>  <span style={{color:'green'}}>non-negative measure</span>                                      <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.0</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:27:5: </span>   <span style={{color:'green'}}>insertion_sort</span>  <span style={{color:'green'}}>body assertion: match exhaustiveness</span>                      <span style={{color:'green'}}>trivial</span>           <span style={{color:'green'}}></span>          <span style={{color:'green'}}>0.0</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:27:5: </span>   <span style={{color:'green'}}>insertion_sort</span>  <span style={{color:'green'}}>postcondition</span>                                             <span style={{color:'green'}}>trivial</span>           <span style={{color:'green'}}></span>          <span style={{color:'green'}}>0.0</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:28:21: </span>  <span style={{color:'green'}}>insertion_sort</span>  <span style={{color:'green'}}>postcondition</span>                                             <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.1</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:29:32: </span>  <span style={{color:'green'}}>insertion_sort</span>  <span style={{color:'green'}}>postcondition</span>                                             <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.2</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:29:32: </span>  <span style={{color:'green'}}>insertion_sort</span>  <span style={{color:'green'}}>precond. (call insert(insertion_sort((scrut.t): @Dro...)</span>  <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.3</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:29:39: </span>  <span style={{color:'green'}}>insertion_sort</span>  <span style={{color:'green'}}>measure decreases</span>                                         <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.1</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:5:7: </span>    <span style={{color:'green'}}>isSorted</span>        <span style={{color:'green'}}>non-negative measure</span>                                      <span style={{color:'green'}}>valid from cache</span>  <span style={{color:'green'}}></span>          <span style={{color:'green'}}>0.0</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>src/main/scala/InsertionSort.scala:6:48: </span>   <span style={{color:'green'}}>isSorted</span>        <span style={{color:'green'}}>measure decreases</span>                                         <span style={{color:'green'}}>valid</span>             <span style={{color:'green'}}>U:smt-z3</span>  <span style={{color:'green'}}>0.0</span> ║
+[<span style={{color:'blue'}}>  Info  </span>] ╟┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄╢
+[<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>total: 17   valid: 17   (2 from cache, 2 trivial) invalid: 0    unknown: 0    time:    1.26</span>                                                           ║
+[<span style={{color:'blue'}}>  Info  </span>] ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+</pre>
 
 Discuss Hoare Logic?
