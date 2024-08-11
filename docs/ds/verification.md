@@ -168,7 +168,7 @@ def insert(nums: List[Int], n: Int): List[Int] = {
 Instead of a precondition, which asserts a property of the input to a function, assertions
 are often used for **postconditions** and **invariants**.
 A postcondition asserts a claim about the output of a function; the combination of
-pre- and post-conditions are often referred to as the **contract** of a function (just
+pre- and postconditions are often referred to as the **contract** of a function (just
 like the signature of a function establishes a contract at the level of types).
 In the sorting functions, one reasonable postcondition is that the output is in order.
 This can be expressed in Scala by adding an `ensuring` clause after the function body:
@@ -378,6 +378,37 @@ establishing that the code will correctly sort any possible list of ints.
 [<span style={{color:'blue'}}>  Info  </span>] ║ <span style={{color:'green'}}>total: 17   valid: 17   (2 from cache, 2 trivial) invalid: 0    unknown: 0    time:    1.26</span>                                                           ║
 [<span style={{color:'blue'}}>  Info  </span>] ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
 </pre>
+
+As a sample of one of the VCs, here is what it generates for the `insert` function
+in the case where the number to be inserted, `n`, is less than or equal to the head of
+the (non-empty) list, `nums`:
+$$
+\forall\texttt{nums}, \texttt{n}\left(
+\begin{array}{c}
+    \texttt{isSorted(nums)}\land\lnot\texttt{nums.isEmpty}\land\texttt{n}\leq\texttt{nums.head}\\
+    \implies\\
+    \texttt{isSorted(result)}\\
+    \land\ \texttt{result.content}=\texttt{nums.content}\cup\texttt{n}\\
+    \land\ \texttt{result.size}=\texttt{nums}+1\\
+    \textit{where}\quad\texttt{result}=\texttt{n :: nums}
+\end{array}
+\right)
+$$
+This may be proved directly from facts about `isSorted`, `content`, and `size`.
+The case where `n` is greater than the head of `nums` is similar, but it requires induction
+to assume properties of the recursive call to insert `n` in the tail of `nums`:
+$$
+\forall\texttt{nums}, \texttt{n}\left(
+\begin{array}{c}
+    \texttt{isSorted(nums)}\land\lnot\texttt{nums.isEmpty}\land\texttt{n}>\texttt{nums.head}\\
+    \implies\\
+    \texttt{isSorted(result)}\\
+    \land\ \texttt{result.content}=\texttt{nums.content}\cup\texttt{n}\\
+    \land\ \texttt{result.size}=\texttt{nums}+1\\
+    \textit{where}\quad\texttt{result}=\texttt{nums.head :: insert(nums.tail, n)}
+\end{array}
+\right)
+$$
 
 We are still limited by the detail of our specification.
 For example, we have not specified anything here about the running time or stack depth needed for this code;
