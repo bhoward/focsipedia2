@@ -109,3 +109,59 @@ def insertAll(t: Tree[Int], nums: List[Int]): Tree[Int] = {
 }
 
 def buildBST(nums: List[Int]): Tree[Int] = insertAll(Tree.Empty, nums)
+
+def inorderCollect(t: Tree[Int]): List[Int] = {
+  t match
+    case Tree.Empty => Nil
+    case Tree.Node(left, value, right) =>
+      inorderCollect(left) ++ List(value) ++ inorderCollect(right)
+}
+
+def treeSort(nums: List[Int]): List[Int] = inorderCollect(buildBST(nums))
+
+def checkHeap(t: Tree[Int]): Boolean = {
+  def aux(t: Tree[Int], min: Int): Boolean = {
+    t match
+      case Tree.Empty => true
+      case Tree.Node(left, value, right) =>
+        min <= value &&
+        aux(left, value) && aux(right, value)
+  }
+
+  aux(t, Int.MinValue)
+}
+
+def heapMerge(h1: Tree[Int], h2: Tree[Int]): Tree[Int] = {
+  (h1, h2) match
+    case (Tree.Empty, _) => h2
+    case (_, Tree.Empty) => h1
+    case (Tree.Node(l1, v1, r1), Tree.Node(l2, v2, r2)) =>
+      if v1 <= v2
+      then Tree.Node(heapMerge(h2, r1), v1, l1)
+      else Tree.Node(heapMerge(h1, r2), v2, l2)
+}
+
+def heapInsert(h: Tree[Int], x: Int): Tree[Int] = heapMerge(h, leaf(x))
+
+def removeMin(h: Tree[Int]): Option[(Int, Tree[Int])] = {
+  h match
+    case Tree.Empty => None
+    case Tree.Node(left, value, right) =>
+      Some((value, heapMerge(left, right)))
+}
+
+def heapInsertAll(h: Tree[Int], nums: List[Int]): Tree[Int] = {
+  nums match
+    case Nil => h
+    case head :: tail => heapInsertAll(heapInsert(h, head), tail)
+}
+
+def buildHeap(nums: List[Int]): Tree[Int] = heapInsertAll(Tree.Empty, nums)
+
+def removeAll(h: Tree[Int]): List[Int] = {
+  removeMin(h) match
+    case None => Nil
+    case Some((min, rest)) => min :: removeAll(rest)
+}
+
+def heapSort(nums: List[Int]): List[Int] = removeAll(buildHeap(nums))

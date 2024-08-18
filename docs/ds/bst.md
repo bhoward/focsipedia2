@@ -97,7 +97,7 @@ def showTree[T](t: Tree[T]): Image = {
 val treeDemo = showTree(demo)
 ```
 ```scala mdoc:passthrough
-RenderFile(treeDemo, "bstDemo")
+RenderFile(treeDemo, "bstDemo.png")
 ```
 
 The advantage of a binary search tree is that it provides a fast way to determine whether a given value is in the data structure.
@@ -163,7 +163,7 @@ val badBST = buildBST(List(1, 2, 3, 4, 5, 6, 7, 8, 9))
 // val badBST = buildBST(List(1, 9, 2, 8, 3, 7, 4, 6, 5))
 ```
 ```scala mdoc:passthrough
-RenderFile(showTree(badBST), "badBST")
+RenderFile(showTree(badBST), "badBST.png")
 ```
 
 It is not at all unusual to build a binary search tree from a collection that is already sorted, or even close to sorted, so a serious implementation of this data structure will have to do extra work to ensure that it stays balanced; we will see the details in the [next section](balance.md).
@@ -190,25 +190,25 @@ This will have an average case running time of $O(N\log N)$, and if we put some 
 Another interesting data structure related to the binary search tree is the (binary) heap.
 Just as before, we will consider trees with `Int` values, but now the ordering condition will be that the root value is less than or equal to _all_ of the rest of the values in the tree; as with the BST condition, this **heap condition** needs to hold recursively for every subtree.
 
-**TODO**
-
 Here is a function to check the heap condition:
-```reason edit
-let checkHeap = t => {
-  let rec aux = (t, min) => {
-    switch (t) {
-    | EmptyTree => true
-    | TreeNode(left, n, right) => (min <= n)
-        && aux(left, n) && aux(right, n)
-    }
-  };
+```scala mdoc
+def checkHeap(t: Tree[Int]): Boolean = {
+  def aux(t: Tree[Int], min: Int): Boolean = {
+    t match
+      case Tree.Empty => true
+      case Tree.Node(left, value, right) =>
+        min <= value &&
+        aux(left, value) && aux(right, value)
+  }
 
-  aux(t, min_int)
-};
+  aux(t, Int.MinValue)
+}
 
-let heapDemo = TreeNode(leaf(42), 17, TreeNode(leaf(50), 34, leaf(38)));
-checkHeap(heapDemo);
-draw(showTree(heapDemo, string_of_int));
+val heapDemo = Tree.Node(leaf(42), 17, Tree.Node(leaf(50), 34, leaf(38)))
+checkHeap(heapDemo)
+```
+```scala mdoc:passthrough
+RenderFile(showTree(heapDemo), "heapDemo.png")
 ```
 
 Note that the ordering condition for a heap is somewhat looser than for a BST: there is no restriction on the relative values between the left and right subtrees, only between the root and its descendents.
@@ -217,73 +217,73 @@ The heap condition guarantees that the smallest value will always be at the root
 This makes the heap a good implementation of the concept of a **priority queue**.
 Like an ordinary queue, values can be added and removed from a priority queue; instead of removing the value that has been in the queue the longest, however, the value removed from a priority queue will be the _smallest_.
 (This is technically known as a **minheap**.
-Reversing the test in the condition will give a **maxheap**, where the largest value is at the root and the corresponding priority queue always returns the largest remaining element.)
+Reversing the test in the heap condition will give a **maxheap**, where the largest value is at the root and the corresponding priority queue always returns the largest remaining element.)
 
 The most important operation on heaps is the `heapMerge`: given two heaps, combine their elements into a single heap. As usual, this is straightforward by pattern matching. In fact, here is a version known as the **skew merge** that has a surprising additional property:
-```reason edit
-let rec heapMerge = (h1, h2) => {
-  switch (h1, h2) {
-  | (EmptyTree, _) => h2
-  | (_, EmptyTree) => h1
-  | (TreeNode(l1, n1, r1), TreeNode(l2, n2, r2)) =>
-      if (n1 <= n2) {
-        TreeNode(heapMerge(h2, r1), n1, l1)
-      } else {
-        TreeNode(heapMerge(h1, r2), n2, l2)
-      }
-  }
-};
+```scala mdoc
+def heapMerge(h1: Tree[Int], h2: Tree[Int]): Tree[Int] = {
+  (h1, h2) match
+    case (Tree.Empty, _) => h2
+    case (_, Tree.Empty) => h1
+    case (Tree.Node(l1, v1, r1), Tree.Node(l2, v2, r2)) =>
+      if v1 <= v2
+      then Tree.Node(heapMerge(h2, r1), v1, l1)
+      else Tree.Node(heapMerge(h1, r2), v2, l2)
+}
 ```
-The new smallest element must be either the root of `h1` (`n1`) or `h2` (`n2`). After deciding to put that value at the root of the resulting tree, we have its two children plus the other heap to deal with, but we only have space for two subheaps. By merging the other heap with the right child, but putting the result on the left, the skew merge can be shown to be **self-adjusting**; that is, it will stay balanced enough that, at least over the long run, all operations can be performed in logarithmic time.
+The new smallest element must be either the root of `h1` (`v1`) or `h2` (`v2`). After deciding to put that value at the root of the resulting tree, we have its two children plus the other heap to deal with, but we only have space for two subheaps. By merging the other heap with the right child, but putting the result on the left, the skew merge can be shown to be **self-adjusting**; that is, it will stay balanced enough that, at least over the long run, all operations can be performed in logarithmic time.
 
 Using the `heapMerge` function, we can implement `heapInsert` and `removeMin` easily:
-```reason edit
-let heapInsert = (h, x) => { heapMerge(h, leaf(x)) };
+```scala mdoc
+def heapInsert(h: Tree[Int], x: Int): Tree[Int] = heapMerge(h, leaf(x))
 
-let removeMin = h => {
-  switch (h) {
-  | EmptyTree => None
-  | TreeNode(left, n, right) => Some((n, heapMerge(left, right)))
-  }
-};
+def removeMin(h: Tree[Int]): Option[(Int, Tree[Int])] = {
+  h match
+    case Tree.Empty => None
+    case Tree.Node(left, value, right) =>
+      Some((value, heapMerge(left, right)))
+}
 
-let Some((min, rest)) = removeMin(heapDemo);
-draw(showTree(rest, string_of_int));
+val Some((min, rest)) = removeMin(heapDemo)
+```
+```scala mdoc:passthrough
+RenderFile(showTree(rest), "removeMin.png")
 ```
 
 ### Heapsort
 
 Finally, if we start with a list, insert each of the numbers in turn into an initially empty heap, and then repeatedly remove the smallest element from the heap until it is empty, we get another efficient sorting algorithm.
 Known as **Heapsort**, it is guaranteed to be $O(N\log N)$, as long as we can ensure the heap is relatively balanced.
-```reason edit
-let rec heapInsertAll = (h, nums) => {
-  switch (nums) {
-  | [] => h
-  | [head, ...tail] => heapInsertAll(heapInsert(h, head), tail)
-  }
-};
+```scala mdoc
+def heapInsertAll(h: Tree[Int], nums: List[Int]): Tree[Int] = {
+  nums match
+    case Nil => h
+    case head :: tail => heapInsertAll(heapInsert(h, head), tail)
+}
 
-let buildHeap = nums => { heapInsertAll(EmptyTree, nums) };
+def buildHeap(nums: List[Int]): Tree[Int] = heapInsertAll(Tree.Empty, nums)
 
-let rec removeAll = h => {
-  switch (removeMin(h)) {
-  | None => []
-  | Some((min, rest)) => [min, ...removeAll(rest)]
-  }
-};
+def removeAll(h: Tree[Int]): List[Int] = {
+  removeMin(h) match
+    case None => Nil
+    case Some((min, rest)) => min :: removeAll(rest)
+}
 
-let heapSort = nums => removeAll(buildHeap(nums));
+def heapSort(nums: List[Int]): List[Int] = removeAll(buildHeap(nums))
 
-heapSort([3, 1, 4, 1, 5, 9, 2, 6, 5]);
+heapSort(List(3, 1, 4, 1, 5, 9, 2, 6, 5))
 ```
 
 ## Exercises
 
 1. Consider the following tree:
-```reason hidden
-let t = TreeNode(TreeNode(TreeNode(leaf(5), 3, leaf(7)), 2, leaf(4)), 1, TreeNode(leaf(9), 6, leaf(8)));
-draw(showTree(t, string_of_int));
+```scala mdoc:invisible
+val t = Tree.Node(Tree.Node(Tree.Node(leaf(5), 3, leaf(7)), 2, leaf(4)), 1, Tree.Node(leaf(9), 6, leaf(8)))
 ```
+```scala mdoc:passthrough
+RenderFile(showTree(t), "bstEx1.png")
+```
+
 List the values according to the preorder, inorder, postorder, and level order traversals.
 
 <details>
@@ -299,27 +299,23 @@ List the values according to the preorder, inorder, postorder, and level order t
 </details>
 
 2. Show the result of removing the minimum item from the tree in Exercise 1, treating it as a binary heap (you may use either the skew merge function described above or the complete binary tree implementation described in class).
+```scala mdoc:invisible
+removeMin(t) match
+  case None => ()
+  case Some((min, rest)) =>
+    RenderFile(showTree(rest), "bstEx2a.png")
+val t2 = Tree.Node(Tree.Node(Tree.Node(leaf(7), 5, Tree.Empty), 3, leaf(4)), 2, Tree.Node(leaf(9), 6, leaf(8)))
+RenderFile(showTree(t2), "bstEx2b.png")
+```
 
 <details>
   <summary>Answer</summary>
 
-  Using the skew merge:
-  ```reason hidden
-  switch (removeMin(t)) {
-  | None => ()
-  | Some((min, rest)) => {
-      Printf.printf("Minimum value is %d\n", min);
-      draw(showTree(rest, string_of_int));
-    }
-  }
-  ```
+  Using the skew merge, the minimum is 1 and the remaining tree is:
+  ![tree with 2 at the root, 4 as its left child, and the 3,5,7 subtree as its right child; the 4 node has the 6,9,8 subtree as its left child and an empty right child](/img/doodle/bstEx2a.png)
 
-  Using the complete tree implementation:
-  ```reason hidden
-  print_string("Minimum value is 1\n");
-  let t2 = TreeNode(TreeNode(TreeNode(leaf(7), 5, EmptyTree), 3, leaf(4)), 2, TreeNode(leaf(9), 6, leaf(8)));
-  draw(showTree(t2, string_of_int));
-  ```
+  Using the complete tree implementation, the minimum is 1 and the remaining tree is:
+  ![tree with 2 at the root, 3 as its left child, and the 6,9,8 subtree as its right child; the 3 node has 5 as its left child and 4 as its right child, while the 5 has 7 as its left child and an empty right child](/img/doodle/bstEx2b.png)
 </details>
 
 3. Suppose you tried to use the tree from Exercise 1 as a binary search tree. For which values would the `search` function return `true`?
