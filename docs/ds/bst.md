@@ -4,63 +4,100 @@ title: Binary Search Trees and Heaps
 ---
 
 Let us consider binary trees whose values can be ordered.
-For concreteness, we will just take the value type to be `int`, although it could just as well be `string` or `float` or anything else with a comparison operator.
+For concreteness, we will just take the value type to be `Int`, although
+with a little more work (not relevant to what we need here) we could
+parameterize the functions with any value type with an appropriate
+comparison operation.
 
 ## Binary Search Trees
 
-If we add the restriction to binary trees that all of the values in the left subtree of any node have to be less than (or equal to) the value in the node, and all of the values in the right subtree have to be greater than (or equal to) that value, then we get a **binary search tree**.
+If we add the restriction to binary trees that all of the values in the
+left subtree of any node have to be less than (or equal to) the value in the node,
+and all of the values in the right subtree have to be greater than (or equal to)
+that value, then we get a **binary search tree**.
 
-Here is our type definition for binary trees again, plus a function that checks whether the binary search tree (BST) condition holds for a given `tree(int)`.
-It works by checking that the root value is between `int_min` and `int_max` (which should be trivially true), and then recursively checking that each subtree contains values in an appropriate restriction of that range.
-```reason edit
-type tree('a) = EmptyTree | TreeNode(tree('a), 'a, tree('a));
+Here is our type definition for binary trees again, plus a function that checks
+whether the binary search tree (BST) condition holds for a given `Tree[Int]`.
+It works by checking that the root value is between `Int.MinValue` and `Int.MaxValue`
+(which should be trivially true), and then recursively checking that each subtree
+contains values in an appropriate restriction of that range.
+```scala mdoc
+enum Tree[+T]:
+  case Empty
+  case Node(left: Tree[T], value: T, right: Tree[T])
 
-let leaf = a => { TreeNode(EmptyTree, a, EmptyTree) };
+def leaf[T](value: T): Tree[T] = {
+  Tree.Node(Tree.Empty, value, Tree.Empty)
+}
 
-let checkBST = t => {
-  /* check that all values in t are between min and max, inclusive,
-   * and that all subtrees satisfy the BST condition
-   */
-  let rec aux = (t, min, max) => {
-    switch (t) {
-    | EmptyTree => true
-    | TreeNode(left, n, right) => (min <= n) && (n <= max)
-        && aux(left, min, n) && aux(right, n, max)
-    }
-  };
+def checkBST(t: Tree[Int]): Boolean = {
+  // Check that all values in t are between min and max, inclusive,
+  // and that all subtrees satisfy the BST condition
+  def aux(t: Tree[Int], min: Int, max: Int): Boolean = {
+    t match
+      case Tree.Empty => true
+      case Tree.Node(left, value, right) =>
+        min <= value && value <= max &&
+        aux(left, min, value) &&
+        aux(right, value, max)
+  }
 
-  aux(t, min_int, max_int)
-};
+  aux(t, Int.MinValue, Int.MaxValue)
+}
 
-let demo = TreeNode(leaf(17), 34, TreeNode(leaf(38), 42, leaf(50)));
-checkBST(demo);
+val demo = Tree.Node(leaf(17), 34, Tree.Node(leaf(38), 42, leaf(50)))
+checkBST(demo)
 ```
 
 Here is the `demo` tree rendered with the `showTree` function:
 
-```reason hidden
-let rec showTree = (t, show) => {
-  switch (t) {
-  | EmptyTree => solid(Color("black"), circle(2.))
-  | TreeNode(lt, value, rt) => {
-      let showLeft = showTree(lt, show);
-      let showRight = showTree(rt, show);
-      let leftShift = right(showLeft) +. 10.;
-      let rightShift = left(showRight) -. 10.;
-      let leftLine = openPath([moveXY(0., 0.), lineXY(leftShift, -30.)]);
-      let rightLine = openPath([moveXY(0., 0.), lineXY(rightShift, -30.)]);
-      let leftImage = focus(TR, showLeft +++ focus(BL, leftLine));
-      let rightImage = focus(TL, showRight +++ focus(BR, rightLine));
-      let valueImage = stroke(Color("none"), fill(Color("black"), text(show(value))))
-        +++ stroke(Color("black"), fill(Color("white"), square(20.)));
-      valueImage +++ leftImage +++ rightImage
-    }
-  }
-};
-```
+```scala mdoc:invisible
+import doodle.core.*
+import doodle.image.*
+import doodle.image.syntax.all.*
+import doodle.image.syntax.core.*
+import doodle.java2d.*
+import doodle.core.font.*
+import edu.depauw.bhoward.RenderFile
 
-```reason edit
-draw(showTree(demo, string_of_int));
+val EMPTY_WIDTH = 5
+val NODE_WIDTH = 20
+val HSPACE = 10
+val VSPACE = 30
+
+def showTreeWidths[T](t: Tree[T]): (Double, Double) = {
+  t match
+    case Tree.Empty => (EMPTY_WIDTH / 2, EMPTY_WIDTH / 2)
+    case Tree.Node(left, _, right) =>
+      val (ll, lr) = showTreeWidths(left)
+      val (rl, rr) = showTreeWidths(right)
+      (ll + lr + HSPACE, rl + rr + HSPACE)
+}
+
+def showTree[T](t: Tree[T]): Image = {
+  t match
+    case Tree.Empty => Image.circle(EMPTY_WIDTH).fillColor(Color.black)
+    case Tree.Node(left, value, right) =>
+      val showLeft = showTree(left)
+      val showRight = showTree(right)
+      val (_, lr) = showTreeWidths(left)
+      val (rl, _) = showTreeWidths(right)
+      val leftShift = lr + HSPACE
+      val rightShift = rl + HSPACE
+      val leftLine = Image.path(OpenPath.empty.lineTo(leftShift, VSPACE))
+      val rightLine = Image.path(OpenPath.empty.lineTo(-rightShift, VSPACE))
+      val leftImage = showLeft `on` leftLine
+      val rightImage = showRight `on` rightLine
+      Image.text(value.toString) `on`
+        Image.square(NODE_WIDTH).fillColor(Color.white) `on`
+        leftImage.originAt(Landmark.topRight) `on`
+        rightImage.originAt(Landmark.topLeft)
+}
+
+val treeDemo = showTree(demo)
+```
+```scala mdoc:passthrough
+RenderFile(treeDemo, "bstDemo")
 ```
 
 The advantage of a binary search tree is that it provides a fast way to determine whether a given value is in the data structure.
@@ -78,23 +115,18 @@ Because the logarithm function grows so slowly, this means that even for billion
 [^1]: A nice rule of thumb is that every factor of 1000 adds ten to the number of comparisons in binary search, since $\log_2 1000\approx 10$.
 
 Binary search is very easy to write by pattern matching on a tree:
-```reason edit
-let rec search = (t, x) => {
-  switch (t) {
-  | EmptyTree => false
-  | TreeNode(left, n, right) =>
-      if (x == n) {
-        true
-      } else if (x < n) {
-        search(left, x)
-      } else {
-        search(right, x)
-      }
-  }
-};
+```scala mdoc
+def search(t: Tree[Int], x: Int): Boolean = {
+  t match
+    case Tree.Empty => false
+    case Tree.Node(left, value, right) =>
+      if x == value then true
+      else if x < value then search(left, x)
+      else search(right, x)
+}
 
-search(demo, 42);
-search(demo, 43);
+search(demo, 42)
+search(demo, 43)
 ```
 
 ### Worst Case for Binary Search
@@ -106,58 +138,59 @@ If _every_ node had that misfortune, then at each comparison we would only reduc
 That would mean that in the worst case we would have to examine every node in the tree: that would be $O(N)$, and we might as well be using a linked list!
 
 You might think that this case is very unlikely, but consider the following function to build a binary search tree from a given list:
-```reason edit
-let rec insert = (t, x) => {
-  switch (t) {
-  | EmptyTree => leaf(x)
-  | TreeNode(left, n, right) =>
-      if (x < n) {
-        TreeNode(insert(left, x), n, right)
-      } else {
-        TreeNode(left, n, insert(right, x))
-      }
-  }
-};
+```scala mdoc
+def insert(t: Tree[Int], x: Int): Tree[Int] = {
+  t match
+    case Tree.Empty => leaf(x)
+    case Tree.Node(left, value, right) =>
+      if x < value
+      then Tree.Node(insert(left, x), value, right)
+      else Tree.Node(left, value, insert(right, x))
+}
 
-let rec insertAll = (t, xs) => {
-  switch (xs) {
-  | [] => t
-  | [head, ...tail] => insertAll(insert(t, head), tail)
-  }
-};
+def insertAll(t: Tree[Int], nums: List[Int]): Tree[Int] = {
+  nums match
+    case Nil => t
+    case head :: tail => insertAll(insert(t, head), tail)
+}
 
-let buildBST = nums => { insertAll(EmptyTree, nums) };
+def buildBST(nums: List[Int]): Tree[Int] = insertAll(Tree.Empty, nums)
 ```
 
 Here is what happens if we build a BST from an already sorted list:
-```reason edit
-let badBST = buildBST([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-draw(showTree(badBST, string_of_int));
+```scala mdoc
+val badBST = buildBST(List(1, 2, 3, 4, 5, 6, 7, 8, 9))
+// val badBST = buildBST(List(1, 9, 2, 8, 3, 7, 4, 6, 5))
 ```
-It is not at all unusual to build a binary search tree from a collection that is already sorted, or even close to sorted, so a serious implementation of this data structure will have to do extra work to ensure that it stays balanced.
-We will not go into the details here, but good approaches to binary search trees that are guaranteed to be balanced are Red-Black trees or AVL trees.
+```scala mdoc:passthrough
+RenderFile(showTree(badBST), "badBST")
+```
+
+It is not at all unusual to build a binary search tree from a collection that is already sorted, or even close to sorted, so a serious implementation of this data structure will have to do extra work to ensure that it stays balanced; we will see the details in the [next section](balance.md).
 
 ### Tree Sort
 
 By combining the `buildBST` function with an inorder traversal that collects all of the elements of the tree back into a list, we get another way to sort a list of numbers:
-```reason edit
-let rec inorderCollect = t => {
-  switch (t) {
-  | EmptyTree => []
-  | TreeNode(left, n, right) => inorderCollect(left) @ [n] @ inorderCollect(right)
-  }
-};
+```scala mdoc
+def inorderCollect(t: Tree[Int]): List[Int] = {
+  t match
+    case Tree.Empty => Nil
+    case Tree.Node(left, value, right) =>
+      inorderCollect(left) ++ List(value) ++ inorderCollect(right)
+}
 
-let treeSort = nums => { inorderCollect(buildBST(nums)) };
+def treeSort(nums: List[Int]): List[Int] = inorderCollect(buildBST(nums))
 
-treeSort([3, 1, 4, 1, 5, 9, 2, 6, 5]);
+treeSort(List(3, 1, 4, 1, 5, 9, 2, 6, 5))
 ```
-This will have an average case running time of $O(N\log N)$, and if we put some effort into ensuring that the intermediate tree was well-balanced then that would also be the worst-case time.
+This will have an average case running time of $O(N\log N)$, and if we put some effort into ensuring that the intermediate tree were well-balanced then that would also be the worst-case time.
 
 ## Heaps
 
 Another interesting data structure related to the binary search tree is the (binary) heap.
-Just as before, we will consider trees with `int` values, but now the ordering condition will be that the root value is less than or equal to _all_ of the rest of the values in the tree; as with the BST condition, this **heap condition** needs to hold recursively for every subtree.
+Just as before, we will consider trees with `Int` values, but now the ordering condition will be that the root value is less than or equal to _all_ of the rest of the values in the tree; as with the BST condition, this **heap condition** needs to hold recursively for every subtree.
+
+**TODO**
 
 Here is a function to check the heap condition:
 ```reason edit

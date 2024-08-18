@@ -30,7 +30,7 @@ Note that it does not precisely follow the order in the book's table of contents
 
 ### [Binary Search Trees and Heaps](ds/bst.md)
 
-### Balanced Binary Search Trees
+### [Balanced Binary Search Trees](ds/balance.md)
 
 ### [Graphs, Representations, Traversals](ds/graphs.md)
 

@@ -76,14 +76,17 @@ import edu.depauw.bhoward.RenderFile
 ```scala mdoc:silent
 val EMPTY_WIDTH = 5
 val NODE_WIDTH = 20
-val HSPACE = 30
+val HSPACE = 10
 val VSPACE = 30
 
-def showTreeWidth[T](t: Tree[T]): Double = {
+// Compute the widths of the left and right subtrees of t
+def showTreeWidths[T](t: Tree[T]): (Double, Double) = {
   t match
-    case Tree.Empty => EMPTY_WIDTH
+    case Tree.Empty => (EMPTY_WIDTH / 2, EMPTY_WIDTH / 2)
     case Tree.Node(left, _, right) =>
-      showTreeWidth(left) + HSPACE + showTreeWidth(right)
+      val (ll, lr) = showTreeWidths(left)
+      val (rl, rr) = showTreeWidths(right)
+      (ll + lr + HSPACE, rl + rr + HSPACE)
 }
 
 def showTree[T](t: Tree[T]): Image = {
@@ -92,8 +95,10 @@ def showTree[T](t: Tree[T]): Image = {
     case Tree.Node(left, value, right) =>
       val showLeft = showTree(left)
       val showRight = showTree(right)
-      val leftShift = (showTreeWidth(left) + HSPACE) / 2
-      val rightShift = (showTreeWidth(right) + HSPACE) / 2
+      val (_, lr) = showTreeWidths(left)
+      val (rl, _) = showTreeWidths(right)
+      val leftShift = lr + HSPACE
+      val rightShift = rl + HSPACE
       val leftLine = Image.path(OpenPath.empty.lineTo(leftShift, VSPACE))
       val rightLine = Image.path(OpenPath.empty.lineTo(-rightShift, VSPACE))
       val leftImage = showLeft `on` leftLine
@@ -103,7 +108,6 @@ def showTree[T](t: Tree[T]): Image = {
         leftImage.originAt(Landmark.topRight) `on`
         rightImage.originAt(Landmark.topLeft)
 }
-
 val treeDemo = showTree(demo)
 ```
 ```scala mdoc:passthrough
