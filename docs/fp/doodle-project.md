@@ -1,175 +1,189 @@
 ---
 id: doodle-project
-title: DPoodle Graphics Drawing Project
+title: Doodle Graphics Drawing Project
 ---
 
-For Monday, March 30, create a drawing using the [DPoodle](doodle.md) graphics library. You should feel free to be as creative as you like, the only requirement is that the drawing use recursion in an essential way.
+Create a drawing using the [Doodle](doodle.md) graphics library. You should feel free to be as creative as you like, the only requirement is that the drawing use recursion in an essential way.
+You should endeavor to only call the `draw` method once to render a final `Image`; that is, the drawing should be built up as a *composition* of smaller images (some of which should be generated recursively).
 
-Here is an editor where you can enter your code. *Be sure to copy and paste it somewhere else* because this editor will be cleared when the page reloads. I suggest keeping a copy in a text editor such as WordPad or TextEdit. When you are done, upload it to Moodle: [Section A](https://moodle.depauw.edu/mod/assign/view.php?id=243021) or [Section B](https://moodle.depauw.edu/mod/assign/view.php?id=243023).
+You should start by forking the [template repository](https://github.com/bhoward/creative-scala-template) on GitHub and following the instructions in its README file; this will be demonstrated in class.
+When you are done, upload your code (as a .zip file or as a link to a GitHub repository) to Moodle.
 
-```reason edit
-/*
- * your code here
- */
+---
+
+```scala mdoc:invisible
+import doodle.core.*
+import doodle.image.*
+import doodle.image.syntax.all.*
+import doodle.image.syntax.core.*
+import doodle.java2d.*
+import doodle.core.font.*
+import edu.depauw.bhoward.RenderFile
 ```
-
----
-
 Here are some examples to give you ideas:
 
 Bralin Coleman, Fall 2019:
-```reason edit
-let col = count => {
-  switch (count) {
-  | 0 => empty
-  | k => fill(hsl(float_of_int(k), 1.0, 0.5), rectangle(10., 10.))
-  }
-};
+```scala mdoc:silent
+def col(count: Int): Image = {
+  count match
+    case 0 => Image.empty
+    case k => Image.rectangle(10, 10).fillColor(Color.hsl(k.degrees, 1, 0.5))
+}
 
-let rec box = count => {
-  switch (count) {
-  | 0 => empty
-  | n => col(n) ||| box(n - 5)
-  }
-};
+def box(count: Int): Image = {
+  count match
+    case 0 => Image.empty
+    case n => col(n) `beside` box(n - 5)
+}
 
-let rec row = count => {
-  switch (count) {
-  | 0 => empty
-  | n => row(n - 10) --- (col(n) ||| box(n - 5))
-  }
-};
+def row(count: Int): Image = {
+  count match
+    case 0 => Image.empty
+    case n => row(n - 10) `above` (col(n) `beside` box(n - 5))
+}
 
-let rec rowR = count => {
-  switch (count) {
-  | 0 => empty
-  | n => (col(n) ||| box(n - 5)) --- rowR(n - 10)
-  }
-};
+def rowR(count: Int): Image = {
+  count match
+    case 0 => Image.empty
+    case n => (col(n) `beside` box(n - 5)) `above` rowR(n - 10)
+}
 
-let diamond = count => {
-  switch (count) {
-  | 0 => empty
-  | n => row(n) --- rowR(n)
-  }
-};
+def diamond(count: Int): Image = {
+  count match
+    case 0 => Image.empty
+    case n => row(n) `above` rowR(n)
+}
 
-draw(diamond(200));
+val colemanResult = diamond(200)
+// colemanResult.draw()
+```
+```scala mdoc:passthrough
+RenderFile(colemanResult, "ColemanDoodle.png")
 ```
 
 Kien Ta, Fall 2019:
-```reason edit
-let sample = (start, radius, samples) => {
-  let step = 10.;
-  let dot = triangle(10., 10.);
-  let rec loop = count => {
-    let angle = radians(step *. float_of_int(count));
-    let r = radius /. float_of_int(samples) *. float_of_int(count); 
-    switch (count) {
-    | 0 => empty
-    | n => fill(hsl(float_of_int(240 + count * 50), 1., 0.5),
-        translate(r *. cos(angle), r *. sin(angle), dot)) +++ loop(n - 1)
-    }
-  };
+```scala mdoc:silent
+def sample(radius: Double, samples: Int): Image = {
+  val step = 10
+  val dot = Image.triangle(10, 10)
+  def loop(count: Int): Image = {
+    val angle = (step * count).radians
+    val r = count * radius / samples
+    count match
+      case 0 => Image.empty
+      case n =>
+        dot.at(r, angle).fillColor(Color.hsl((240 + count * 50).degrees, 1, 0.5)) `on`
+          loop(n - 1)
+  }
 
   loop(samples)
-};
-draw(sample(0., 250., 200));
+}
+val taResult = sample(250, 200)
+// taResult.draw()
+```
+```scala mdoc:passthrough
+RenderFile(taResult, "TaDoodle.png")
 ```
 
 Michael Lackey, Fall 2019:
-```reason edit
-let sky = solid(Color("skyblue"), rectangle(400., 200.));
-let ground = solid(Color("green"), rectangle(400., 100.));
-let roof = solid(Color("red"), triangle(50., 50.));
-let frontDoor = solid(Color("blue"), rectangle(50., 15.)) ---
-  (solid(Color("black"), rectangle(10., 25.)) +++
-    solid(Color("blue"), rectangle(50., 25.)));
-let house = roof --- frontDoor;
+```scala mdoc:silent
+val sky = Image.rectangle(400, 200).fillColor(Color.skyBlue).noStroke
+val ground = Image.rectangle(400, 100).fillColor(Color.green).noStroke
+val roof = Image.triangle(50, 50).fillColor(Color.red).noStroke
+val frontDoor = Image.rectangle(50, 15).fillColor(Color.blue).noStroke `above`
+  (Image.rectangle(10, 25).fillColor(Color.black).noStroke `on`
+   Image.rectangle(50, 25).fillColor(Color.blue).noStroke)
+val house = roof `above` frontDoor
 
-let rec town = count => {
-  switch (count) {
-  | 0 => empty
-  | n => house ||| town(n - 1)
-  }
-};
+def town(count: Int): Image = {
+  count match
+    case 0 => Image.empty
+    case n => house `beside` town(n - 1)
+}
 
-let townPlace = town(5);
-draw(translate(0., 40., townPlace) +++ translate(0., 100., ground) +++ sky);
+val townPlace = town(5)
+val lackeyResult = townPlace.at(0, -40) `on` ground.at(0, -100) `on` sky
+// lackeyResult.draw()
+```
+```scala mdoc:passthrough
+RenderFile(lackeyResult, "LackeyDoodle.png")
 ```
 
 Abby Hutson-Comeaux, Fall 2019:
-```reason edit
+```scala mdoc:silent
 /* Establishing colors for the honeycomb & bee */
-let orangeYellow = rgb(255, 215, 0);
-let yellow = rgb(255, 255, 0);
-let black = rgb(0, 0, 0);
-let white = rgb(255, 255, 255);
+val orangeYellow = Color.rgb(255, 215, 0)
+val yellow = Color.rgb(255, 255, 0)
+val black = Color.rgb(0, 0, 0)
+val white = Color.rgb(255, 255, 255)
 
 /* Creating a plain yellow background */
-let background = solid(yellow, rectangle(400., 300.));
+val background = Image.rectangle(480, 350).fillColor(yellow).noStroke
 
 /* oneComb generates each individual honey comb piece */
-let oneComb = strokeWidth(3., stroke(yellow, fill(orangeYellow, regularPolygon(6, 15., 90.))));
+val oneComb = Image.regularPolygon(6, 15).rotate(90.degrees)
+  .fillColor(orangeYellow).strokeColor(yellow).strokeWidth(3)
 
 /* Method to create each row with the desired number of combs per row */
-let rec combsPerRow = num => {
-  switch (num) { 
-  | 1 => oneComb
-  | num => oneComb ||| combsPerRow(num - 1)
-  }
-};
+def combsPerRow(num: Int): Image = {
+  num match 
+    case 1 => oneComb
+    case num => oneComb `beside` combsPerRow(num - 1)
+}
 
 /* Method to actually create the honey comb that will be placed over the background */
-let rec honeyComb = rows => {
-  switch (rows) {
-  | 0 => empty 
-  | rows => combsPerRow(16) --- honeyComb(rows - 1)
-  }
-};
+def honeyComb(rows: Int): Image = {
+  rows match
+    case 0 => Image.empty 
+    case rows => combsPerRow(16) `above` honeyComb(rows - 1)
+}
 
 /* Making the bottom piece to the bee, including the lines */
-let beeButt = fill(yellow, openPath([
-  moveXY(-30., 0.), curveXY(-30., 0., 0., -35., 30., 0.),
-  moveXY(-30., 0.), curveXY(-30., 0., 0., 35., 30., 0.),
+val beeButt = Image.path(OpenPath.empty
+  .moveTo(-30, 0).curveTo(-30, 0, 0, -35, 30, 0)
+  .moveTo(-30, 0).curveTo(-30, 0, 0, 35, 30, 0)
   /* add lines for the bees body */
-  moveXY(-15., -12.), lineXY(-15., 12.),
-  moveXY(-5., -16.), lineXY(-5., 16.),
-  moveXY(5., -16.), lineXY(5., 16.),
-  moveXY(15., -12.), lineXY(15., 12.)
-]));
+  .moveTo(-15, -12).lineTo(-15, 12)
+  .moveTo(-5, -16).lineTo(-5, 16)
+  .moveTo(5, -16).lineTo(5, 16)
+  .moveTo(15, -12).lineTo(15, 12)
+)
 
 /* Adding the wing to the bottom of the bee */
-let bottomWing = openPath([
-  moveXY(0., 17.), lineXY(0., 35.),
-]) +++ fill(white, closedPath([
-  moveXY(0., 10.), curveXY(0., 10., -15., 30., 0., 40.),
-  curveXY(15., 30., 0., 10., 0., 10.)
-]));
+val bottomWing = Image.path(OpenPath.empty
+  .moveTo(0, 17).lineTo(0, 35)
+) `on` Image.path(ClosedPath.empty
+  .moveTo(0, 10).curveTo(0, 10, -15, 30, 0, 40)
+  .curveTo(15, 30, 0, 10, 0, 10)
+).fillColor(white)
 
 /* Adding the wing to the top of the bee */
-let topWing = openPath([
-  moveXY(0., -17.), lineXY(0., -35.),
-]) +++ fill(white, closedPath([
-  moveXY(0., -10.), curveXY(0., -10., -15., -30., 0., -40.),
-  curveXY(15., -30., 0., -10., 0., -10.)
-]));
+val topWing = Image.path(OpenPath.empty
+  .moveTo(0, -17).lineTo(0, -35)
+) `on` Image.path(ClosedPath.empty
+  .moveTo(0, -10).curveTo(0, -10, -15, -30, 0, -40)
+  .curveTo(15, -30, 0, -10, 0, -10)
+).fillColor(white)
 
-let beeBody = fill(black, circle(11.));
-let beeHead = fill(yellow, circle(7.));
+val beeBody = Image.circle(11).fillColor(black)
+val beeHead = Image.circle(7).fillColor(yellow)
 
 /* Combining the parts of the bee */
-let bee = beeBody +++ translate(12., 0., beeHead) +++ translate(-25., 0., beeButt);
-let finalBee = bee +++ bottomWing +++ topWing;
+val bee = beeBody `on` beeHead.originAt(12, 0) `on` beeButt.originAt(-25, 0)
+val finalBee = bee `on` bottomWing `on` topWing
 
-let words = fill(black, withFont(3.0, Serif, Regular, Normal, text("~Bee Happy~")));
+val words = Image.text("~Bee Happy~").font(Font.defaultSerif.size(48))
 
 /* Joining the text, honey comb, and bee all together */
-let finalHoneyComb = words +++ translate(0., 10., honeyComb(10) +++ background);
+val finalHoneyComb = words `on` (honeyComb(10) `on` background).originAt(0, 10)
 
 /* Add bees to the drawing */
-let oneBee = rotate(320., finalBee) +++ translate(120., 55., finalHoneyComb);
-let twoBee = rotate(140., finalBee) +++ translate(-230., -120., oneBee);
+val oneBee = finalBee.rotate(40.degrees) `on` finalHoneyComb.originAt(120, -55)
+val twoBee = finalBee.rotate(220.degrees) `on` oneBee.originAt(-230, 120)
 
-draw(twoBee);
+val hutsonResult = twoBee
+// hutsonResult.draw()
+```
+```scala mdoc:passthrough
+RenderFile(hutsonResult, "HutsonDoodle.png")
 ```

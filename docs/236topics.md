@@ -15,7 +15,7 @@ Note that it does not precisely follow the order in the book's table of contents
 
 ### [Algebraic Data Types and Pattern Matching](fp/types.md)
 
-### [Functional Graphics](fp/doodle.md)
+### [Functional Graphics](fp/doodle.md) and [Drawing Project](fp/doodle-project.md)
 
 ## Week 2:
 ### [MapReduce](fp/map-reduce.md)
