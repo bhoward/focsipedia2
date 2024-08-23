@@ -185,7 +185,7 @@ void Hanoi(int n, int A, int B, int C) {
 }
 ```
 
-Again, here is equivalent code in ReasonML:[^2]
+Again, here is equivalent code in Scala:[^2]
 ```scala mdoc
 def hanoi(n: Int, a: Int, b: Int, c: Int): Unit = {
   if n == 1 then
@@ -520,7 +520,7 @@ to prove this fact.
   for every $n>0$.
 </details>
 
-1. Use induction to prove that the _Hanoi_ subroutine
+2. Use induction to prove that the _Hanoi_ subroutine
 uses $2^n-1$ moves to solve the Towers of Hanoi problem for $n$ disks.
 (There is a story that goes along with the Towers of Hanoi problem.
 It is said that on the day the world was created, a group of monks in Hanoi
@@ -550,7 +550,7 @@ int power(int x, int n) {
    } else if (n % 2 == 0) {
       answer = power(x * x, n / 2);
    } else {
-      answer = x * power(x * x, (n - 1) / 2);
+      answer = x * power(x, n - 1);
    }
    return answer;
 }
@@ -575,7 +575,7 @@ actually a very efficient way to compute $x^n$.)
   Then we need to show that it is also true for $n$. If $n$ is even, then `power(x, n)`
   is `power(x*x, n/2)`; since $\frac{n}{2}<n$, we know by the induction hypothesis that
   this computes $(x^2)^{\frac{n}{2}}=x^n$. If $n$ is odd, then `power(x, n)` is
-  `x * power(x*x, (n-1)/2)`, which similarly we know to compute $x(x^2)^{\frac{n-1}{2}}=x\cdot x^{n-1}=x^n$.
+  `x * power(x, n-1)`, which similarly we know to compute $x\cdot x^{n-1}=x^n$.
   Therefore, we have shown that `power(x, n)` correctly computes $x^n$ for all $n\ge 0$.
 </details>
 
@@ -583,7 +583,7 @@ actually a very efficient way to compute $x^n$.)
 is undefined; they're thinking of a much broader statement about limiting forms
 in real analysis, which doesn't concern us here.
 
-4. Write the _power_ function from the previous problem in Scala, and
+1. Write the _power_ function from the previous problem in Scala, and
 check that it works on several examples. _Hint:_ The code will be almost
 the same as the Java, except for the different function syntax and not
 using the temporary variable _answer_ (see examples above).
@@ -603,7 +603,7 @@ def power(x: BigInt, n: Int): BigInt = {
     else if n % 2 == 0 then
       power(x * x, n / 2)
     else
-      x * power(x * x, (n - 1) / 2)
+      x * power(x, n - 1)
   }
   ```
 </details>
