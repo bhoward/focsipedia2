@@ -579,11 +579,7 @@ actually a very efficient way to compute $x^n$.)
   Therefore, we have shown that `power(x, n)` correctly computes $x^n$ for all $n\ge 0$.
 </details>
 
-[^1]: Don't listen to the people who try to say that $0^0$
-is undefined; they're thinking of a much broader statement about limiting forms
-in real analysis, which doesn't concern us here.
-
-1. Write the _power_ function from the previous problem in Scala, and
+4. Write the _power_ function from the previous problem in Scala, and
 check that it works on several examples. _Hint:_ The code will be almost
 the same as the Java, except for the different function syntax and not
 using the temporary variable _answer_ (see examples above).
@@ -751,7 +747,7 @@ satisfies $f_n<2^n$ for all natural numbers $n$.
   for all natural numbers $n$.
 </details>
 
-9. Suppose that $a_1$, $a_2$, $a_3$, &hellip;, is a sequence of
+10. Suppose that $a_1$, $a_2$, $a_3$, &hellip;, is a sequence of
 numbers which is defined recursively by $a_1=1$ and
 $a_n=2a_{n-1}+2^{n-1}$ for $n>1$. Prove that
 $a_n=n2^{n-1}$ for every positive integer $n$.
@@ -762,3 +758,7 @@ $a_n=n2^{n-1}$ for every positive integer $n$.
   suppose that $a_n=n2^{n-1}$ for some $n\ge 1$. Then $a_{n+1}=2a_n+2^n=2n2^{n-1}+2^n=n2^n+2^n=(n+1)2^{(n+1)-1}$,
   which shows that it also holds for $n+1$. Therefore it holds for all $n\ge 1$.
 </details>
+
+[^1]: Don't listen to the people who try to say that $0^0$
+is undefined; they're thinking of a much broader statement about limiting forms
+in real analysis, which doesn't concern us here.
