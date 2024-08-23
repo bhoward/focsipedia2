@@ -165,3 +165,67 @@ def removeAll(h: Tree[Int]): List[Int] = {
 }
 
 def heapSort(nums: List[Int]): List[Int] = removeAll(buildHeap(nums))
+
+object RedBlackTree {
+  enum Color:
+    case Red
+    case Black
+
+  enum Tree:
+    case Empty
+    case Node(color: Color, left: Tree, value: Int, right: Tree)
+
+  import Color.*
+  import Tree.*
+
+  def search(t: Tree, x: Int): Boolean = {
+    t match
+      case Empty => false
+      case Node(_, left, value, right) =>
+        if x == value then true
+        else if x < value then search(left, x)
+        else search(right, x)
+  }
+
+  def insert(t: Tree, x: Int): Tree = {
+    def aux(t: Tree, x: Int): Tree = {
+      t match
+      case Empty =>
+        Node(Red, Empty, x, Empty)
+      case Node(color, left, value, right) =>
+        if x < value
+        then balance(color, aux(left, x), value, right)
+        else balance(color, left, value, aux(right, x))
+    }
+
+    def balance(color: Color, left: Tree, value: Int, right: Tree): Tree = {
+      (color, left, value, right) match
+        case (Black, Node(Red, Node(Red, a, llv, b), lv, lr), value, right) => 
+          Node(Red, Node(Black, a, llv, b), lv, Node(Black, lr, value, right))
+        case (Black, Node(Red, ll, lv, Node(Red, a, lrv, b)), value, right) => 
+          Node(Red, Node(Black, ll, lv, a), lrv, Node(Black, b, value, right))
+        case (Black, left, value, Node(Red, Node(Red, a, rlv, b), rv, rr)) => 
+          Node(Red, Node(Black, left, value, a), rlv, Node(Black, b, rv, rr))
+        case (Black, left, value, Node(Red, rl, rv, Node(Red, a, rrv, b))) => 
+          Node(Red, Node(Black, left, value, rl), rv, Node(Black, a, rrv, b))
+        case _ => Node(color, left, value, right)
+    }
+
+    def makeBlack(t: Tree): Tree = {
+      t match
+        case Node(Red, left, value, right) =>
+          Node(Black, left, value, right)
+        case _ => t
+    }
+
+    makeBlack(aux(t, x))
+  }
+}
+
+object AVLTree {
+  enum Tree:
+    case Empty
+    case Node(height: Int, left: Tree, value: Int, right: Tree)
+
+  // TODO
+}
