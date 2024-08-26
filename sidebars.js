@@ -62,6 +62,7 @@ const sidebars = {
       'ds/verification',
       'ds/trees',
       'ds/bst',
+      'ds/balance',
       'ds/graphs',
     ],
     'Formal Languages': [

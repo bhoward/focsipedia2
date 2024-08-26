@@ -212,4 +212,7 @@ More recent uses of postfix expressions and stack-based evaluation are the PostS
 
 ## Exercises
 
-TBD
+1. Write a Scala function `height[T](t: Tree[T]): Int` that computes the **height** of the tree `t`.
+We define the height of an empty tree to be 0, and the height of a node is one more than the larger
+of the heights of its children.
+In Scala, the binary operator `a max b` computes the maximum of `a` and `b`.

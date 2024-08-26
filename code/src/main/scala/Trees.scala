@@ -223,9 +223,40 @@ object RedBlackTree {
 }
 
 object AVLTree {
-  enum Tree:
-    case Empty
-    case Node(height: Int, left: Tree, value: Int, right: Tree)
+  enum Tree(val height: Int):
+    case Empty extends Tree(0)
+    case Node(left: Tree, value: Int, right: Tree) extends Tree(1 + (left.height max right.height))
+  import Tree.*
 
-  // TODO
+  def insert(t: Tree, x: Int): Tree = {
+    t match
+      case Empty => Node(Empty, x, Empty)
+      case Node(left, value, right) =>
+        if x < value then
+          rotate(Node(insert(left, x), value, right))
+        else
+          rotate(Node(left, value, insert(right, x)))
+  }
+
+  def rotate(t: Tree): Tree = {
+    t match
+      case Empty => t
+      case Node(left, value, right) =>
+        if left.height - right.height > 1 then
+          val Node(ll, lv, lr) = left
+          if ll.height > lr.height then // Left-Left
+            Node(ll, lv, Node(lr, value, right))
+          else // Left-Right
+            val Node(rl, rv, rr) = lr
+            Node(Node(Node(ll, lv, rl), rv, rr), value, right)
+        else if right.height - left.height > 1 then
+          val Node(rl, rv, rr) = right
+          if rl.height < rr.height then // Right-Right
+            Node(Node(left, value, rl), rv, rr)
+          else // Right-Left
+            val Node(ll, lv, lr) = rl
+            Node(left, value, Node(ll, lv, Node(lr, rv, rr)))
+        else
+          Node(rotate(left), value, rotate(right))
+  }
 }
