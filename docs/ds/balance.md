@@ -32,30 +32,33 @@ import edu.depauw.bhoward.RenderFile
 enum Tree[+T]:
   case Empty
   case Node(left: Tree[T], value: T, right: Tree[T])
+  case Subtree(height: Int, label: String)
 import Tree.*
 
 def leaf[T](value: T): Tree[T] = {
-  Tree.Node(Tree.Empty, value, Tree.Empty)
+  Node(Empty, value, Empty)
 }
 
 val EMPTY_WIDTH = 5
 val NODE_WIDTH = 20
+val SUBTREE_WIDTH = 30
 val HSPACE = 10
 val VSPACE = 30
 
 def showTreeWidths[T](t: Tree[T]): (Double, Double) = {
   t match
-    case Tree.Empty => (EMPTY_WIDTH / 2, EMPTY_WIDTH / 2)
-    case Tree.Node(left, _, right) =>
+    case Empty => (EMPTY_WIDTH / 2, EMPTY_WIDTH / 2)
+    case Node(left, _, right) =>
       val (ll, lr) = showTreeWidths(left)
       val (rl, rr) = showTreeWidths(right)
       (ll + lr + HSPACE, rl + rr + HSPACE)
+    case Subtree(_, _) => (SUBTREE_WIDTH / 2, SUBTREE_WIDTH / 2)
 }
 
 def showTree[T](t: Tree[T]): Image = {
   t match
-    case Tree.Empty => Image.circle(EMPTY_WIDTH).fillColor(Color.black)
-    case Tree.Node(left, value, right) =>
+    case Empty => Image.circle(EMPTY_WIDTH).fillColor(Color.black)
+    case Node(left, value, right) =>
       val showLeft = showTree(left)
       val showRight = showTree(right)
       val (_, lr) = showTreeWidths(left)
@@ -70,6 +73,9 @@ def showTree[T](t: Tree[T]): Image = {
         Image.square(NODE_WIDTH).fillColor(Color.white) `on`
         leftImage.originAt(Landmark.topRight) `on`
         rightImage.originAt(Landmark.topLeft)
+    case Subtree(height, label) =>
+      (Image.text(label) `on`
+        Image.triangle(SUBTREE_WIDTH, height * VSPACE)).originAt(Landmark.topCenter)
 }
 
 val tree1 = leaf(1)
@@ -125,9 +131,99 @@ For each node in the tree, we will require that the heights of its children diff
 That is, if we define the **balance factor** `BF(Node(left, value, right))` to be
 `height(right) - height(left)`, then the AVL condition says that `-1 <= BF(n) <= +1` for every node `n`.
 
-TODO describe rotations
+This looser balance condition is enough to guarantee that the height is bounded by the logarithm of the
+number of nodes,[^1] but it is also flexible enough that we can preserve the condition with only minor
+adjustments as each value is inserted or deleted.
 
-Here is Scala code that implements AVL tree insertion:
+[^1]: Interestingly, we can show that the minimum number of nodes in an AVL tree of height `h` is
+proportional to the Fibonacci number $F_h$. This should make sense, because the most unbalanced case
+is when one child has height $h-1$ and the other has height $h-2$, so the recurrence for the total
+number of nodes looks like $N(h) = N(h-1) + N(h-2) + 1$. Since the Fibonacci numbers grow exponentially,
+with growth factor $\varphi=1.618\ldots$ (the Golden Ratio), we can see that the height of an AVL tree
+with $N$ nodes is at most $\log_\varphi N$.
+
+The key to this obervation is the concept of a **rotation** of a subtree.
+Suppose the node `n` has a left child (`L`) whose height is one greater than its right child (`R`).
+This means that `L` is non-empty, so we may decompose it into its root node (`l`) and children
+(`ll` and `lr`).
+
+```scala mdoc:invisible
+val rotBefore1 = Node(Subtree(3, "L"), "n", Subtree(2, "R"))
+val rotBefore2 = Node(Node(Subtree(2, "ll"), "l", Subtree(2, "lr")), "n", Subtree(2, "R"))
+val eq = (Image.text("=") `on` spacer).originAt(Landmark.topCenter)
+val rotBefore = showTree(rotBefore1) `beside` eq `beside` showTree(rotBefore2)
+```
+```scala mdoc:passthrough
+RenderFile(rotBefore, "rotBefore.png")
+```
+
+Now we can perform a **right rotation** by moving node `l` up to the root and pushing `n` down into
+its right child:
+
+```scala mdoc:invisible
+val rotAfter = Node(Subtree(2, "ll"), "l", Node(Subtree(2, "lr"), "n", Subtree(2, "R")))
+```
+```scala mdoc:passthrough
+RenderFile(showTree(rotAfter), "rotAfter.png")
+```
+
+This rotation converts a tree with balance factor -1 into one with balance factor +1.
+Importantly, note that we have also preserved the binary search tree property, because
+all of the values in the subtree `ll` are $\leq$ the value in node `l`, the values in
+subtree `lr` are between the values in `l` and `n`, and the values in subtree `R` are $\geq$
+the value in `n`.
+The rotated tree still has the correct relative positioning of all of these values, but we
+have "shifted its weight" from the left to the right.
+We can also perform a **left rotation** to reverse this operation.
+
+Suppose we have just inserted a value in the left subtree of `n` that would violate the AVL
+balance condition.
+There are two cases to consider: either the subtree `ll` is too tall (the "Left-Left" case) or
+the subtree `lr` is too tall (the "Left-Right" case), depending on which one contains the
+new element.
+
+In the Left-Left case, a right rotation as shown above will be enough to fix the AVL condition,
+and the new root `l` will have balance factor 0:
+
+```scala mdoc:invisible
+val llBefore = Node(Node(Subtree(3, "ll"), "l", Subtree(2, "lr")), "n", Subtree(2, "R"))
+val rr = (Image.text("-rotate right->") `on` Image.rectangle(100, 50).noStroke).originAt(Landmark.topCenter)
+val llAfter = Node(Subtree(3, "ll"), "l", Node(Subtree(2, "lr"), "n", Subtree(2, "R")))
+val leftLeft = showTree(llBefore) `beside` rr `beside` showTree(llAfter)
+```
+```scala mdoc:passthrough
+RenderFile(leftLeft, "leftLeft.png")
+```
+
+The Left-Right case is slightly more involved, because a single rotation will leave it unbalanced.
+However, if we first perform a left rotation on the subtree `L` we can produce an intermediate tree
+that looks like the Left-Left case, so a second rotation (this time to the right) on the full subtree
+will fix up the balance:
+
+```scala mdoc:invisible
+val lrBefore1 = Node(Node(Subtree(2, "ll"), "l", Subtree(3, "lr")), "n", Subtree(2, "R"))
+val lrBefore2 = Node(Node(Subtree(2, "ll"), "l", Node(Subtree(2, "lrl"), "lr", Subtree(2, "lrr"))), "n", Subtree(2, "R"))
+val rl = (Image.text("-rotate left->") `on` Image.rectangle(100, 50).noStroke).originAt(Landmark.topCenter)
+val lrMiddle = Node(Node(Node(Subtree(2, "ll"), "l", Subtree(2, "lrl")), "lr", Subtree(2, "lrr")), "n", Subtree(2, "R"))
+val lrAfter = Node(Node(Subtree(2, "ll"), "l", Subtree(2, "lrl")), "lr", Node(Subtree(2, "lrr"), "n", Subtree(2, "R")))
+val leftRight = showTree(lrBefore1) `beside` eq `beside`
+  showTree(lrBefore2) `beside` rl `beside`
+  showTree(lrMiddle) `beside` rr `beside`
+  showTree(lrAfter)
+```
+```scala mdoc:passthrough
+RenderFile(leftRight, "leftRight.png")
+```
+
+We may check that the resulting height of the tree after these modifications is the same as it was
+before the insertion, so the balance condition further up in the tree will not need further repair.
+Of course, if the AVL balance condition were violated by insertion in a right child, we would fix it
+by considering analogous Right-Right and Right-Left cases and performing rotations the other direction.
+
+Here is Scala code that implements AVL tree insertion.
+As an optimization, we have added a `height` field to each `Tree` object, which is computed
+and saved when the leaf or node is constructed; this avoids multiple traversals of the tree
+to recompute the heights when checking the balance condition.
 ```scala mdoc
 object AVLTree {
   enum Tree(val height: Int):
@@ -149,27 +245,28 @@ object AVLTree {
     t match
       case Empty => t
       case Node(left, value, right) =>
-        if left.height - right.height > 1 then
+        val BF = right.height - left.height
+        if BF < -1 then
           val Node(ll, lv, lr) = left
           if ll.height > lr.height then // Left-Left
             Node(ll, lv, Node(lr, value, right))
           else // Left-Right
             val Node(rl, rv, rr) = lr
             Node(Node(Node(ll, lv, rl), rv, rr), value, right)
-        else if right.height - left.height > 1 then
+        else if BF > 1 then
           val Node(rl, rv, rr) = right
           if rl.height < rr.height then // Right-Right
             Node(Node(left, value, rl), rv, rr)
           else // Right-Left
             val Node(ll, lv, lr) = rl
             Node(left, value, Node(ll, lv, Node(lr, rv, rr)))
-        else
+        else // BF is in valid range
           Node(rotate(left), value, rotate(right))
   }
 }
 ```
 
-Here is the result of inserting the numbers 1 to 20, in order, into an initially empty AVL tree:
+Finally, here is the result of inserting the numbers 1 to 20, in order, into an initially empty AVL tree:
 ```scala mdoc:invisible
 def toTree(t: AVLTree.Tree): Tree[Int] = {
   t match
@@ -235,7 +332,6 @@ object RedBlackTree {
   }
 }
 ```
-
 
 Here is the result of inserting the numbers 1 to 20, in order, into an initially empty Red-Black tree:
 ```scala mdoc:invisible
