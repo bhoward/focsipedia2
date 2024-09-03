@@ -12,15 +12,16 @@ This can be expressed with the following recursive data type in Scala:[^1]
 enum Tree[+T]:
   case Empty
   case Node(left: Tree[T], value: T, right: Tree[T])
+import Tree.*
 
 def leaf[T](value: T): Tree[T] = {
-  Tree.Node(Tree.Empty, value, Tree.Empty)
+  Node(Empty, value, Empty)
 }
 
-val demo = Tree.Node(leaf(1), 2, Tree.Node(leaf(3), 4, leaf(5)))
+val demo = Node(leaf(1), 2, Node(leaf(3), 4, leaf(5)))
 ```
 We use a type variable `T` as a parameter to specify the type of values in the tree.
-The function `leaf` is a convenience, so that we can write `leaf(1)` for the tree with just the value 1 and two empty children instead of `Tree.Node(Tree.Empty, 1, Tree.Empty)`.
+The function `leaf` is a convenience, so that we can write `leaf(1)` for the tree with just the value 1 and two empty children instead of `Node(Empty, 1, Empty)`.
 In this case, it will infer that the type parameter `T` should be `Int`, so we get a `Tree[Int]`.
 
 Note the similarity to a list of type `List[T]`, which is either an empty list or a list node with a head value
@@ -29,7 +30,7 @@ Note the similarity to a list of type `List[T]`, which is either an empty list o
 [^1]: The `+` in `enum Tree[+T]` is there as a convenience, for reasons that we will mostly ignore.
 If you want to know, it is marking `Tree` as a **covariant** type constructor, which means that if `S` is a
 subtype of `T`, then `Tree[S]` will also be a subtype of `Tree[T]`.
-The convenience comes in because the actual type of `Tree.Empty` is `Tree[Nothing]`, but since `Nothing` is a
+The convenience comes in because the actual type of `Empty` is `Tree[Nothing]`, but since `Nothing` is a
 subtype of every other type, this means that it also has type `Tree[T]` for any `T`, so we can use the same
 empty tree value in any tree.
 There are also **contravariant** type constructors, indicated with a `-`, where the subtyping goes the
@@ -41,11 +42,11 @@ For example, suppose we want to know how many nodes a tree has:
 ```scala mdoc
 def size[T](t: Tree[T]): Int = {
   t match
-    case Tree.Empty => 0
-    case Tree.Node(left, _, right) => size(left) + 1 + size(right)
+    case Empty => 0
+    case Node(left, _, right) => size(left) + 1 + size(right)
 }
 
-size(Tree.Empty)
+size(Empty)
 size(leaf("hello"))
 size(demo)
 ```
@@ -54,11 +55,11 @@ If we have a list with integer values, we might want to get the total of all the
 ```scala mdoc
 def total(t: Tree[Int]): Int = {
   t match
-    case Tree.Empty => 0
-    case Tree.Node(left, value, right) => total(left) + value + total(right)
+    case Empty => 0
+    case Node(left, value, right) => total(left) + value + total(right)
 }
 
-total(Tree.Empty)
+total(Empty)
 total(demo)
 ```
 
@@ -82,8 +83,8 @@ val VSPACE = 30
 // Compute the widths of the left and right subtrees of t
 def showTreeWidths[T](t: Tree[T]): (Double, Double) = {
   t match
-    case Tree.Empty => (EMPTY_WIDTH / 2, EMPTY_WIDTH / 2)
-    case Tree.Node(left, _, right) =>
+    case Empty => (EMPTY_WIDTH / 2, EMPTY_WIDTH / 2)
+    case Node(left, _, right) =>
       val (ll, lr) = showTreeWidths(left)
       val (rl, rr) = showTreeWidths(right)
       (ll + lr + HSPACE, rl + rr + HSPACE)
@@ -91,8 +92,8 @@ def showTreeWidths[T](t: Tree[T]): (Double, Double) = {
 
 def showTree[T](t: Tree[T]): Image = {
   t match
-    case Tree.Empty => Image.circle(EMPTY_WIDTH).fillColor(Color.black)
-    case Tree.Node(left, value, right) =>
+    case Empty => Image.circle(EMPTY_WIDTH).fillColor(Color.black)
+    case Node(left, value, right) =>
       val showLeft = showTree(left)
       val showRight = showTree(right)
       val (_, lr) = showTreeWidths(left)
@@ -130,8 +131,8 @@ expecting `process` to have a side-effect, such as printing, instead of returnin
 ```scala mdoc
 def preOrder[T](t: Tree[T], process: T => Unit): Unit = {
   t match
-    case Tree.Empty => ()
-    case Tree.Node(left, value, right) =>
+    case Empty => ()
+    case Node(left, value, right) =>
       process(value)
       preOrder(left, process)
       preOrder(right, process)
