@@ -30,231 +30,258 @@ If the nodes are numbered 1 through $N$, then the adjacency matrix is the two-di
 This representation is often extended to labeled graphs where the labels are **weights**: the entry for $(i,j)$ gives the weight (or distance, or cost, &hellip;) of the edge between $i$ and $j$.
 Depending on the application, it may be preferable to use an infinite weight to represent absent edges, rather than 0 (since a weight of 0 might be interpreted as saying there is no cost to go from $i$ to $j$).
 
-Here is some ReasonML code defining types for these representations, plus some conversion functions. In each case, the type is parameterized by a node type `'n`, and the representation type is a pair where the first element is the list of nodes (because there is no generic way to get this list for an arbitrary type `'n`, and if `'n` is `int` or `string` we only want to use a subset of the possible values anyway). The code uses a number of standard functions on lists such as `List.map` and `List.filter`; for details, see the [library documentation](https://reasonml.github.io/api/List.html).
-```reason edit
-type graphPairs('n) = (list('n), list(('n, 'n)));
-type graphAdjList('n) = (list('n), 'n => list('n));
-type graphAdjMatrix('n) = (list('n), ('n, 'n) => bool);
+Here is some Scala code defining types for these representations, plus some conversion functions.
+In each case, the type is parameterized by a node type `T`, and the representation type is a case class where the first component is the list of nodes (because there is no generic way to get this list for an arbitrary type `T`, and if `T` is `Int` or `String` we will only want to use a subset of the possible values anyway).
+```scala mdoc
+trait Graph[T]:
+  def nodes: List[T]
+  def pairs: List[(T, T)]
+  def neighbors(node: T): List[T]
+  def adjacent(node1: T, node2: T): Boolean
+  def asPairs = Graph.Pairs(nodes, pairs)
+  def asAdjList = Graph.AdjList(nodes, neighbors)
+  def asAdjMatrix = Graph.AdjMatrix(nodes, adjacent)
 
-let adjlist_of_pairs = ((nodes, pairs)) => {
-  (nodes,
-    node => List.map(p => snd(p), List.filter(p => fst(p) == node, pairs))
-  )
-};
-
-let adjmatrix_of_pairs = ((nodes, pairs)) => {
-  (nodes,
-    p => List.exists(q => p == q, pairs)
-  )
-};
-
-let pairs_of_adjlist = ((nodes, alist)) => {
-  (nodes,
-    List.flatten(List.map(node => List.map(adj => (node, adj), alist(node)), nodes))
-  )
-};
-
-let adjmatrix_of_adjlist = ((nodes, alist)) => {
-  (nodes,
-    p => List.exists(node => snd(p) == node, alist(fst(p)))
-  )
-};
-
-let pairs_of_adjmatrix = ((nodes, amat)) => {
-  (nodes,
-    List.flatten(List.map(i => List.flatten(List.map(j => if (amat((i, j))) [(i, j)] else [], nodes)), nodes))
-  )
-};
-
-let adjlist_of_adjmatrix = ((nodes, amat)) => {
-  (nodes,
-    i => List.filter(j => amat((i, j)), nodes)
-  )
-};
-
-let rec print_list = (items, string_of_item) => {
-  switch (items) {
-  | [] => print_newline()
-  | [last] => print_string(string_of_item(last) ++ "\n")
-  | [head, ...tail] => {
-      print_string(string_of_item(head) ++ ", ");
-      print_list(tail, string_of_item)
+object Graph:
+  case class Pairs[T](nodes: List[T], pairs: List[(T, T)]) extends Graph[T]:
+    def neighbors(node: T): List[T] = {
+      for
+        (node1, node2) <- pairs
+        if node1 == node
+      yield node2
     }
+
+    def adjacent(node1: T, node2: T): Boolean = pairs.contains(node1 -> node2)
+
+    override def toString: String = pairs.mkString("{", ",", "}")
+
+  case class AdjList[T](nodes: List[T], adj: T => List[T]) extends Graph[T]:
+    def pairs: List[(T, T)] = {
+      for
+        node1 <- nodes
+        node2 <- adj(node1)
+      yield (node1, node2)
+    }
+    
+    def neighbors(node: T): List[T] = adj(node)
+    
+    def adjacent(node1: T, node2: T): Boolean = adj(node1).contains(node2)
+
+    override def toString: String =
+      nodes
+        .map(node => s"$node:${adj(node).mkString("{", ",", "}")}")
+        .mkString("[", "; ", "]")
+
+  case class AdjMatrix[T](nodes: List[T], matrix: (T, T) => Boolean) extends Graph[T]:
+    def pairs: List[(T, T)] = {
+      for
+        node1 <- nodes
+        node2 <- nodes
+        if matrix(node1, node2)
+      yield (node1, node2)
+    }
+    
+    def neighbors(node: T): List[T] = {
+      for
+        node2 <- nodes
+        if matrix(node, node2)
+      yield node2
+    }
+    
+    def adjacent(node1: T, node2: T): Boolean = matrix(node1, node2)
+
+    override def toString: String =
+      nodes
+        .map(n1 => s"$n1:${nodes.map(n2 => matrix(n1, n2).compare(false)).mkString}")
+        .mkString("[", "; ", "]")
+
+// Example 1
+val demo1 = Graph.Pairs(
+  List(1, 2, 3, 4),
+  List(1->1, 1->2, 1->3, 1->4, 2->2, 2->4, 3->3, 4->4)
+)
+
+println(demo1)
+println(demo1.asAdjList)
+println(demo1.asAdjMatrix)
+
+// Example 2
+enum Demo2Nodes:
+  case A, B, C, D
+import Demo2Nodes.*
+
+val demo2 = Graph.AdjList(
+  List(A, B, C, D),
+  {
+    case A => List(B, D)
+    case B => List(A, C)
+    case C => List(B)
+    case D => List(A)
   }
-};
+)
 
-let string_of_pair = (p, string_of_item) => {
-  "(" ++ string_of_item(fst(p)) ++ "," ++ string_of_item(snd(p)) ++ ")"
-};
+println(demo2.asPairs)
+println(demo2)
+println(demo2.asAdjMatrix)
 
-let showPairs = ((nodes, pairs), string_of_node) => {
-  print_list(pairs, p => string_of_pair(p, string_of_node))
-};
-
-let showAdjList = ((nodes, alist), string_of_node) => {
-  List.iter(node => {
-      print_string(string_of_node(node) ++ ": ");
-      print_list(alist(node), string_of_node)
-    }, nodes)
-};
-
-let showAdjMatrix = ((nodes, amat), string_of_node) => {
-  List.iter(i => {
-      print_string(string_of_node(i) ++ ":");
-      List.iter(j => {
-          if (amat((i, j))) {
-            print_string(" 1")
-          } else {
-            print_string(" 0")
-          }
-        }, nodes);
-      print_newline()
-    }, nodes)
-};
-
-print_string("Example 1\n");
-let nodes1 = [1, 2, 3, 4];
-let demoPairs1 = (nodes1, [(1, 1), (1, 2), (1, 3), (1, 4), (2, 2), (2, 4), (3, 3), (4, 4)]);
-let demoAdjList1 = adjlist_of_pairs(demoPairs1);
-let demoAdjMatrix1 =adjmatrix_of_pairs(demoPairs1);
-
-print_string("Pairs\n");
-showPairs(demoPairs1, string_of_int);
-print_string("Adjacency List:\n");
-showAdjList(demoAdjList1, string_of_int);
-print_string("Adjacency Matrix:\n");
-showAdjMatrix(demoAdjMatrix1, string_of_int);
-
-print_string("\nExample 2\n");
-type t2 = A | B | C | D;
-let nodes2 = [A, B, C, D];
-let string_of_t2 = x => {
-  switch (x) {
-  | A => "A"
-  | B => "B"
-  | C => "C"
-  | D => "D"
+// Example 3
+val demo3 = Graph.AdjMatrix(
+  List("red", "green", "yellow"),
+  {
+    case ("red", "green") => true
+    case ("green", "yellow") => true
+    case ("yellow", "red") => true
+    case _ => false
   }
-};
-let demoAdjList2 = (nodes2, node => {
-  switch (node) {
-  | A => [B, D]
-  | B => [A, C]
-  | C => [B]
-  | D => [A]
-  }
-});
-let demoPairs2 = pairs_of_adjlist(demoAdjList2);
-let demoAdjMatrix2 = adjmatrix_of_adjlist(demoAdjList2);
+)
 
-print_string("Pairs\n");
-showPairs(demoPairs2, string_of_t2);
-print_string("Adjacency List:\n");
-showAdjList(demoAdjList2, string_of_t2);
-print_string("Adjacency Matrix:\n");
-showAdjMatrix(demoAdjMatrix2, string_of_t2);
-
-print_string("\nExample 3\n");
-let nodes3 = ["red", "green", "yellow"];
-let demoAdjMatrix3 = (nodes3, ((i, j)) => {
-  switch ((i, j)) {
-  | ("red", "green") => true
-  | ("green", "yellow") => true
-  | ("yellow", "red") => true
-  | _ => false
-  }
-});
-let demoPairs3 = pairs_of_adjmatrix(demoAdjMatrix3);
-let demoAdjList3 = adjlist_of_adjmatrix(demoAdjMatrix3);
-
-print_string("Pairs\n");
-showPairs(demoPairs3, s => s);
-print_string("Adjacency List:\n");
-showAdjList(demoAdjList3, s => s);
-print_string("Adjacency Matrix:\n");
-showAdjMatrix(demoAdjMatrix3, s => s);
+println(demo3.asPairs)
+println(demo3.asAdjList)
+println(demo3)
 ```
 
-Here is a collection of functions to render a graph (represented as pairs) with DPoodle:
-```reason edit
-type graphLayout('n) = (list(('n, (float, float))), list(('n, 'n)));
+Here is a collection of utilities to render a graph with Doodle:
+```scala mdoc:invisible
+import doodle.core.*
+import doodle.image.*
+import doodle.image.syntax.all.*
+import doodle.image.syntax.core.*
+import doodle.java2d.*
+import doodle.core.font.*
+import edu.depauw.bhoward.RenderFile
+```
+```scala mdoc
+trait NodeLayout[T]:
+  def location(node: T): Point
 
-let layoutCircle = ((nodes, pairs), radius)=> {
-  let a = 360. /. float_of_int(List.length(nodes));
-  let locs = List.mapi((i, node) => (node, polar(radius, a *. float_of_int(i))), nodes);
-  (locs, pairs)
-};
+class CircleNodeLayout[T](nodes: List[T], radius: Double) extends NodeLayout[T]:
+  def location(node: T): Point = {
+    val i = nodes.indexOf(node)
+    Point(radius, 90.degrees - 1.turns * i / nodes.length)
+  }
 
-let layoutGrid = ((nodes, pairs), columns, spacing) => {
-  let shift = float_of_int(columns - 1) *. spacing /. 2.;
-  let locs = List.mapi((i, node) => {
-      let row = i / columns;
-      let col = i mod columns;
-      (node, (float_of_int(col) *. spacing -. shift, float_of_int(row) *. spacing))
-    }, nodes);
-  (locs, pairs)
-};
+class GridNodeLayout[T](nodes: List[T], columns: Int, spacing: Double) extends NodeLayout[T]:
+  private val shift = (columns - 1) * spacing / 2
 
-let renderLayout = ((locs, pairs), string_of_node, styleNode, styleEdge) => {
-  let nodeRadius = 10.;
-  let arrowLength = 5.;
-  let arrowAngle = radians(30.);
-  let loopOut = radians(240.);
-  let loopIn = radians(300.);
-  let nodes = List.map(((node, p)) => {
-      translateP(p,
-        styleNode(node, stroke(Color("none"), fill(Color("black"), text(string_of_node(node))))
-        +++ circle(nodeRadius)))
-    }, locs);
-  let edges = List.map(((n1, n2)) => {
-      if (n1 == n2) {
-        let p = List.assoc(n1, locs);
-        let (x, y) = p;
-        let p1 = (x +. nodeRadius *. cos(loopOut), y +. nodeRadius *. sin(loopOut));
-        let p2 = (x +. nodeRadius *. cos(loopIn), y +. nodeRadius *. sin(loopIn));
-        let c1 = (x +. 3. *. nodeRadius *. cos(loopOut), y +. 3. *. nodeRadius *. sin(loopOut));
-        let c2 = (x +. 3. *. nodeRadius *. cos(loopIn), y +. 3. *. nodeRadius *. sin(loopIn));
-        let (x2, y2) = p2;
-        let p3 = (x2 +. arrowLength *. cos(loopIn +. arrowAngle), y2 +. arrowLength *. sin(loopIn +. arrowAngle));
-        let p4 = (x2 +. arrowLength *. cos(loopIn -. arrowAngle), y2 +. arrowLength *. sin(loopIn -. arrowAngle));
-        setBounds(x -. nodeRadius, x +. nodeRadius, y -. 2. *. nodeRadius, y +. nodeRadius,
-          styleEdge(n1, n2, openPath([moveP(p1), curveP(c1, c2, p2), moveP(p2), lineP(p3), moveP(p2), lineP(p4)])))
-      } else {
-        let p1 = List.assoc(n1, locs);
-        let p2 = List.assoc(n2, locs);
-        let (x1, y1) = p1;
-        let (x2, y2) = p2;
-        let dx = x2 -. x1;
-        let dy = y2 -. y1;
-        let a = atan2(dy, dx);
-        let p3 = (x2 -. nodeRadius *. cos(a), y2 -. nodeRadius *. sin(a));
-        let (x3, y3) = p3;
-        let p4 = (x3 -. arrowLength *. cos(a +. arrowAngle), y3 -. arrowLength *. sin(a +. arrowAngle));
-        let p5 = (x3 -. arrowLength *. cos(a -. arrowAngle), y3 -. arrowLength *. sin(a -. arrowAngle));
-        styleEdge(n1, n2, openPath([moveP(p1), lineP(p2), moveP(p3), lineP(p4), moveP(p3), lineP(p5)]))
-      }
-    }, pairs);
-  let nodeImage = List.fold_left((+++), empty, nodes);
-  let edgeImage = List.fold_left((+++), empty, edges);
-  nodeImage +++ edgeImage
-};
+  def location(node: T): Point = {
+    val i = nodes.indexOf(node)
+    val row = i / columns
+    val col = i % columns
+    Point(col * spacing - shift, -row * spacing)
+  }
 
-let defaultStyleNode = (node, img) => {
-  stroke(Color("black"), fill(Color("white"), img))
-};
+trait NodeImage[T]:
+  def apply(node: T, point: Point): Image
+  def radius(node: T): Double
 
-let defaultStyleEdge = (n1, n2, img) => {
-  stroke(Color("black"), img)
-};
+class DefaultNodeImage[T](diameter: Double) extends NodeImage[T]:
+  def apply(node: T, point: Point): Image = {
+    (Image.text(node.toString) `on` Image.circle(diameter)).at(point)
+  }
 
-let customStyleNode = (node, img) => {
-  let fillColor = Color(node);
-  withFont(0.4, Sans, Regular, Normal, stroke(Color("black"), fill(fillColor, img)))
-};
+  def radius(node: T): Double = diameter / 2
 
-draw(renderLayout(layoutCircle(demoPairs1, 50.), string_of_int, defaultStyleNode, defaultStyleEdge));
-draw(renderLayout(layoutGrid(demoPairs2, 3, 50.), string_of_t2, defaultStyleNode, defaultStyleEdge));
-draw(renderLayout(layoutCircle(demoPairs3, 50.), s => s, customStyleNode, defaultStyleEdge));
+class ColoredNodeImage[T](diameter: Double, nodeColor: T => Color)
+extends DefaultNodeImage[T](diameter):
+  override def apply(node: T, point: Point): Image = {
+    super.apply(node, point).fillColor(nodeColor(node))
+  }
+
+trait EdgeImage[T]:
+  def apply(
+    node1: T, point1: Point,
+    node2: T, point2: Point,
+    nodeImage: NodeImage[T]
+  ): Image
+
+class DefaultEdgeImage[T] extends EdgeImage[T]:
+  val arrowLength = 7
+  val arrowAngle = 30.degrees
+  val loopOut = 120.degrees
+  val loopIn = 60.degrees
+
+  def apply(
+    node1: T, point1: Point,
+    node2: T, point2: Point,
+    nodeImage: NodeImage[T]
+  ): Image = {
+    if node1 == node2 then
+      val radius = nodeImage.radius(node1)
+      val p1 = point1 + Vec(radius, loopOut)
+      val p2 = point1 + Vec(radius, loopIn)
+      val c1 = point1 + Vec(4 * radius, loopOut)
+      val c2 = point1 + Vec(4 * radius, loopIn)
+      val p3 = p2 + Vec(arrowLength, loopIn + arrowAngle)
+      val p4 = p2 + Vec(arrowLength, loopIn - arrowAngle)
+      Image.path(OpenPath.empty
+        .moveTo(p1).curveTo(c1, c2, p2)
+        .moveTo(p2).lineTo(p3)
+        .moveTo(p2).lineTo(p4)
+      )
+    else
+      val radius1 = nodeImage.radius(node1)
+      val radius2 = nodeImage.radius(node2)
+      val v = (point2 - point1).normalize
+      val p1 = point1 + v * radius1
+      val p2 = point2 + v * -radius2
+      val p3 = p2 + v.rotate(arrowAngle) * -arrowLength
+      val p4 = p2 + v.rotate(-arrowAngle) * -arrowLength
+      Image.path(OpenPath.empty
+        .moveTo(p1).lineTo(p2)
+        .moveTo(p2).lineTo(p3)
+        .moveTo(p2).lineTo(p4)
+      )
+  }
+
+def showGraph[T](
+  g: Graph[T],
+  layout: NodeLayout[T],
+  nodeImage: NodeImage[T],
+  edgeImage: EdgeImage[T]
+): Image = {
+  val nodeImages = g.nodes.map { case node =>
+    val point = layout.location(node)
+    nodeImage(node, point)
+  }
+
+  val edgeImages = g.pairs.map { case (node1, node2) =>
+    val point1 = layout.location(node1)
+    val point2 = layout.location(node2)
+    edgeImage(node1, point1, node2, point2, nodeImage)
+  }
+
+  nodeImages.foldLeft(Image.empty)(_ `on` _) `on`
+    edgeImages.foldLeft(Image.empty)(_ `on` _)
+}
+```
+Here are renderings of the example graphs:
+```scala mdoc:silent
+val image1 = showGraph(
+  demo1, 
+  new CircleNodeLayout(demo1.nodes, 50), 
+  new DefaultNodeImage(20),
+  new DefaultEdgeImage)
+val image2 = showGraph(
+  demo2,
+  new GridNodeLayout(demo2.nodes, 3, 50),
+  new DefaultNodeImage(20),
+  new DefaultEdgeImage)
+
+def nodeColor(node: String): Color = node match
+  case "red" => Color.red
+  case "yellow" => Color.yellow
+  case "green" => Color.green
+  case _ => Color.white
+val image3 = showGraph(
+  demo3,
+  new CircleNodeLayout(demo3.nodes, 50),
+  new ColoredNodeImage(40, nodeColor),
+  new DefaultEdgeImage)
+```
+```scala mdoc:passthrough
+RenderFile(image1, "GraphDemo1.png")
+RenderFile(image2, "GraphDemo2.png")
+RenderFile(image3, "GraphDemo3.png")
 ```
 
 ## Graph Traversals
@@ -265,7 +292,7 @@ The **depth-first traversal** is analogous to the pre-, in-, and postorder trave
 The **breadth-first traversal** by contrast is analogous to the level order traversal of a tree, where we will visit all of the immediate neighbors before continuing on to visit _their_ neighbors, and so on.
 Just as with level order traversal, the breadth-first traversal does not have as natural a recursive implementation as depth-first, although we will see that both can be expressed with very similar code by making use of an explicit data structure to control the traversal.
 Graph traversals in general are more complicated than tree traversals, because we have to worry about **sharing** of descendants of a node (there may be multiple paths to reach the same node) as well as **cycles** in the graph (there may be paths that loop back on themselves).
-Indeed, one definition of a tree is that it is a graph with a distinguished node, called the root, such that there is a unique path from the root to any other node.
+Indeed, one definition of a tree is that it is a graph with a distinguished node, called the root, such that there is a **unique path** from the root to any other node; if it is unique, then no descendants are shared and there must not be any cycles.
 
 ### Depth-First Traversal
 
@@ -320,207 +347,214 @@ The perhaps surprising fact about the finishing list is that, if there were no c
 The reason is that we can finish a node only after all of the nodes that can be reached from it are finished, so when we put it at the front of the finishing list it will be followed by all of the nodes that depend on it.
 
 As an example of depth-first traversal, consider the following graph:
-```reason demo
-let demo = (["A", "B", "C", "D", "E", "F"],
-  [("A", "B"), ("A", "C"), ("B", "C"), ("B", "D"), ("D", "A"), ("E", "C"), ("E", "F"), ("F", "D"), ("F", "F")]);
-draw(renderLayout(layoutCircle(demo, 40.), s => s, defaultStyleNode, defaultStyleEdge));
+```scala mdoc:silent
+val demo = Graph.Pairs(
+  List("A", "B", "C", "D", "E", "F"),
+  List("A"->"B", "A"->"C", "B"->"C", "B"->"D",
+    "D"->"A", "E"->"C", "E"->"F", "F"->"D", "F"->"F")
+)
+```
+```scala mdoc:passthrough
+class DFSNodeImage[T](diameter: Double, visited: List[T], finished: List[T])
+extends DefaultNodeImage[T](diameter):
+  override def apply(node: T, point: Point): Image = {
+    val image = super.apply(node, point)
+    if visited.contains(node) then
+      image.fillColor(Color.yellow)
+    else if finished.contains(node) then
+      val i = finished.indexOf(node) + 1
+      image.fillColor(Color.cyan) `on` Image.text(i.toString).at(point + Vec(12, -12))
+    else
+      image
+  }
+class DFSEdgeImage[T](tree: List[(T, T)], back: List[(T, T)], forward: List[(T, T)])
+extends DefaultEdgeImage[T]:
+  override def apply(
+    node1: T, point1: Point,
+    node2: T, point2: Point,
+    nodeImage: NodeImage[T]
+  ): Image = {
+    val image = super.apply(node1, point1, node2, point2, nodeImage)
+    val edge = (node1, node2)
+    if tree.contains(edge) then
+      image.strokeWidth(3)
+    else if back.contains(edge) then
+      image.strokeWidth(2).strokeColor(Color.red)
+    else if forward.contains(edge) then
+      image.strokeWidth(2).strokeColor(Color.green)
+    else
+      image
+  }
+val dfs0 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List(), List()),
+  new DFSEdgeImage(List(), List(), List()))
+RenderFile(dfs0, "DFS0.png")
 ```
 
 Start by marking $A$ visited:
-```reason hidden
-let visitedNode = fill(Color("yellow"));
-let finishedNode = n => img => fill(Color("cyan"),
-  img +++ translate(8., 12., withFont(0.4, Serif, Regular, Normal, fill(color("black"), text(string_of_int(n))))));
-let treeEdge = strokeWidth(3.0);
-let backEdge = img => stroke(Color("red"), strokeWidth(2.0, img));
-let forwardEdge = img => stroke(Color("green"), strokeWidth(2.0, img));
-let ns = node => switch (node) {
-| "A" => visitedNode
-| _ => defaultStyleNode(node)
-};
-let es = defaultStyleEdge;
-draw(renderLayout(layoutCircle(demo, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfs1 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List("A"), List()),
+  new DFSEdgeImage(List(), List(), List()))
+RenderFile(dfs1, "DFS1.png")
 ```
 
 Follow the (tree) edge to $B$:
-```reason hidden
-let ns = node => switch (node) {
-| "A" | "B" => visitedNode
-| _ => defaultStyleNode(node)
-};
-let es = (n1, n2) => switch (n1, n2) {
-| ("A", "B") => treeEdge
-| _ => defaultStyleEdge(n1, n2)
-};
-draw(renderLayout(layoutCircle(demo, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfs2 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List("A", "B"), List()),
+  new DFSEdgeImage(List("A"->"B"), List(), List()))
+RenderFile(dfs2, "DFS2.png")
 ```
 
 Follow the (tree) edge from $B$ to $C$:
-```reason hidden
-let ns = node => switch (node) {
-| "A" | "B" | "C" => visitedNode
-| _ => defaultStyleNode(node)
-};
-let es = (n1, n2) => switch (n1, n2) {
-| ("A", "B") | ("B", "C") => treeEdge
-| _ => defaultStyleEdge(n1, n2)
-};
-draw(renderLayout(layoutCircle(demo, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfs3 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List("A", "B", "C"), List()),
+  new DFSEdgeImage(List("A"->"B", "B"->"C"), List(), List()))
+RenderFile(dfs3, "DFS3.png")
 ```
 
 Node $C$ has no neighbors at all, so mark it finished:
-```reason hidden
-let ns = node => switch (node) {
-| "A" | "B" => visitedNode
-| "C" => finishedNode(1)
-| _ => defaultStyleNode(node)
-};
-let es = (n1, n2) => switch (n1, n2) {
-| ("A", "B") | ("B", "C") => treeEdge
-| _ => defaultStyleEdge(n1, n2)
-};
-draw(renderLayout(layoutCircle(demo, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfs4 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List("A", "B"), List("C")),
+  new DFSEdgeImage(List("A"->"B", "B"->"C"), List(), List()))
+RenderFile(dfs4, "DFS4.png")
 ```
 
 Back at node $B$, follow the (tree) edge to $D$:
-```reason hidden
-let ns = node => switch (node) {
-| "A" | "B" | "D" => visitedNode
-| "C" => finishedNode(1)
-| _ => defaultStyleNode(node)
-};
-let es = (n1, n2) => switch (n1, n2) {
-| ("A", "B") | ("B", "C") | ("B", "D") => treeEdge
-| _ => defaultStyleEdge(n1, n2)
-};
-draw(renderLayout(layoutCircle(demo, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfs5 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List("A", "B", "D"), List("C")),
+  new DFSEdgeImage(List("A"->"B", "B"->"C", "B"->"D"), List(), List()))
+RenderFile(dfs5, "DFS5.png")
 ```
 
 The only edge out of $D$ goes to $A$, which is visited but not yet finished, so mark it as a back edge and mark $D$ finished:
-```reason hidden
-let ns = node => switch (node) {
-| "A" | "B" => visitedNode
-| "C" => finishedNode(1)
-| "D" => finishedNode(2)
-| _ => defaultStyleNode(node)
-};
-let es = (n1, n2) => switch (n1, n2) {
-| ("A", "B") | ("B", "C") | ("B", "D") => treeEdge
-| ("D", "A") => backEdge
-| _ => defaultStyleEdge(n1, n2)
-};
-draw(renderLayout(layoutCircle(demo, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfs6 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List("A", "B"), List("C", "D")),
+  new DFSEdgeImage(List("A"->"B", "B"->"C", "B"->"D"), List("D"->"A"), List()))
+RenderFile(dfs6, "DFS6.png")
 ```
 
 Now node $B$ is also finished, so back up to node $A$ and consider its remaining outward edge.
 It goes to node $C$, which is already finished, so mark it as a forward edge and mark $A$ finished as well:
-```reason hidden
-let ns = node => switch (node) {
-| "A" => finishedNode(4)
-| "B" => finishedNode(3)
-| "C" => finishedNode(1)
-| "D" => finishedNode(2)
-| _ => defaultStyleNode(node)
-};
-let es = (n1, n2) => switch (n1, n2) {
-| ("A", "B") | ("B", "C") | ("B", "D") => treeEdge
-| ("D", "A") => backEdge
-| ("A", "C") => forwardEdge
-| _ => defaultStyleEdge(n1, n2)
-};
-draw(renderLayout(layoutCircle(demo, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfs7 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List(), List("C", "D", "B", "A")),
+  new DFSEdgeImage(List("A"->"B", "B"->"C", "B"->"D"), List("D"->"A"), List("A"->"C")))
+RenderFile(dfs7, "DFS7.png")
 ```
 
 We still have nodes $E$ and $F$ unvisited. Arbitrarily restart the traversal at $E$, and first consider the edge to $C$. Since $C$ is already finished, this is another forward edge:
-```reason hidden
-let ns = node => switch (node) {
-| "A" => finishedNode(4)
-| "B" => finishedNode(3)
-| "C" => finishedNode(1)
-| "D" => finishedNode(2)
-| "E" => visitedNode
-| _ => defaultStyleNode(node)
-};
-let es = (n1, n2) => switch (n1, n2) {
-| ("A", "B") | ("B", "C") | ("B", "D") => treeEdge
-| ("D", "A") => backEdge
-| ("A", "C") | ("E", "C") => forwardEdge
-| _ => defaultStyleEdge(n1, n2)
-};
-draw(renderLayout(layoutCircle(demo, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfs8 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List("E"), List("C", "D", "B", "A")),
+  new DFSEdgeImage(List("A"->"B", "B"->"C", "B"->"D"),
+    List("D"->"A"), List("A"->"C", "E"->"C")))
+RenderFile(dfs8, "DFS8.png")
 ```
 
 Now follow the tree edge from $E$ to $F$, and find the edge from $F$ to $D$ is a forward edge:
-```reason hidden
-let ns = node => switch (node) {
-| "A" => finishedNode(4)
-| "B" => finishedNode(3)
-| "C" => finishedNode(1)
-| "D" => finishedNode(2)
-| "E" | "F" => visitedNode
-| _ => defaultStyleNode(node)
-};
-let es = (n1, n2) => switch (n1, n2) {
-| ("A", "B") | ("B", "C") | ("B", "D") | ("E", "F") => treeEdge
-| ("D", "A") => backEdge
-| ("A", "C") | ("E", "C") | ("F", "D") => forwardEdge
-| _ => defaultStyleEdge(n1, n2)
-};
-draw(renderLayout(layoutCircle(demo, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfs9 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List("E", "F"), List("C", "D", "B", "A")),
+  new DFSEdgeImage(List("A"->"B", "B"->"C", "B"->"D", "E"->"F"),
+    List("D"->"A"), List("A"->"C", "E"->"C", "F"->"D")))
+RenderFile(dfs9, "DFS9.png")
 ```
 
 Finally, the edge from $F$ to itself is a back edge, after which $F$ and then $E$ are finished:
-```reason hidden
-let ns = node => switch (node) {
-| "A" => finishedNode(4)
-| "B" => finishedNode(3)
-| "C" => finishedNode(1)
-| "D" => finishedNode(2)
-| "E" => finishedNode(6)
-| "F" => finishedNode(5)
-| _ => defaultStyleNode(node)
-};
-let es = (n1, n2) => switch (n1, n2) {
-| ("A", "B") | ("B", "C") | ("B", "D") | ("E", "F") => treeEdge
-| ("D", "A") | ("F", "F") => backEdge
-| ("A", "C") | ("E", "C") | ("F", "D") => forwardEdge
-| _ => defaultStyleEdge(n1, n2)
-};
-draw(renderLayout(layoutCircle(demo, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfs10 = showGraph(
+  demo,
+  new CircleNodeLayout(demo.nodes, 50),
+  new DFSNodeImage(20, List(), List("C", "D", "B", "A", "F", "E")),
+  new DFSEdgeImage(List("A"->"B", "B"->"C", "B"->"D", "E"->"F"),
+    List("D"->"A", "F"->"F"), List("A"->"C", "E"->"C", "F"->"D")))
+RenderFile(dfs10, "DFS10.png")
 ```
 
 Since there were back edges, the graph has at least one cycle. In fact, there are two: $A\rightarrow B\rightarrow D\rightarrow A$, and $F\rightarrow F$. In general, there may not be an exact match between the number of back edges and the number of cycles, because several cycles may share a single back edge.
 
 For another example, here is the same graph with the edges $D\rightarrow A$ and $F\rightarrow F$ removed:
-```reason demo
-let demo2 = (["A", "B", "C", "D", "E", "F"],
-  [("A", "B"), ("A", "C"), ("B", "C"), ("B", "D"), ("E", "C"), ("E", "F"), ("F", "D")]);
-draw(renderLayout(layoutCircle(demo2, 40.), s => s, defaultStyleNode, defaultStyleEdge));
+
+```scala mdoc:passthrough
+val demoB = Graph.Pairs(
+  List("A", "B", "C", "D", "E", "F"),
+  List("A"->"B", "A"->"C", "B"->"C", "B"->"D",
+    "E"->"C", "E"->"F", "F"->"D")
+)
+
+val dfsB0 = showGraph(
+  demoB,
+  new CircleNodeLayout(demoB.nodes, 50),
+  new DFSNodeImage(20, List(), List()),
+  new DFSEdgeImage(List(), List(), List()))
+RenderFile(dfsB0, "DFSB0.png")
 ```
+
 We leave the details of tracing through the traversal as an exercise, but here is the final marked graph:
-```reason hidden
-let ns = node => switch (node) {
-| "A" => finishedNode(4)
-| "B" => finishedNode(3)
-| "C" => finishedNode(1)
-| "D" => finishedNode(2)
-| "E" => finishedNode(6)
-| "F" => finishedNode(5)
-| _ => defaultStyleNode(node)
-};
-let es = (n1, n2) => switch (n1, n2) {
-| ("A", "B") | ("B", "C") | ("B", "D") | ("E", "F") => treeEdge
-| ("A", "C") | ("E", "C") | ("F", "D") => forwardEdge
-| _ => defaultStyleEdge(n1, n2)
-};
-draw(renderLayout(layoutCircle(demo2, 40.), s => s, ns, es));
+
+```scala mdoc:passthrough
+val dfsB1 = showGraph(
+  demoB,
+  new CircleNodeLayout(demoB.nodes, 50),
+  new DFSNodeImage(20, List(), List("C", "D", "B", "A", "F", "E")),
+  new DFSEdgeImage(List("A"->"B", "B"->"C", "B"->"D", "E"->"F"),
+    List(), List("A"->"C", "E"->"C", "F"->"D")))
+RenderFile(dfsB1, "DFSB1.png")
 ```
+
 The finishing list is $E$, $F$, $A$, $B$, $D$, $C$ in this case. Since there were no back edges, this is a topological ordering of the nodes in the graph. Here is the graph with the nodes reordered:
-```reason hidden
-let demo3 = (["E", "F", "A", "B", "D", "C"],
-  [("A", "B"), ("A", "C"), ("B", "C"), ("B", "D"), ("E", "C"), ("E", "F"), ("F", "D")]);
-draw(renderLayout(layoutGrid(demo3, 6, 40.), s => s, defaultStyleNode, defaultStyleEdge));
+
+```scala mdoc:passthrough
+val demoC = Graph.Pairs(
+  List("E", "F", "A", "B", "D", "C"),
+  List("A"->"B", "A"->"C", "B"->"C", "B"->"D",
+    "E"->"C", "E"->"F", "F"->"D")
+)
+
+val dfsC0 = showGraph(
+  demoC,
+  new GridNodeLayout(demoC.nodes, 6, 50),
+  new DFSNodeImage(20, List(), List()),
+  new DFSEdgeImage(List(), List(), List()))
+RenderFile(dfsC0, "DFSC0.png")
 ```
+
 Observe that all of the arrows go from left to right. (**TODO** This diagram will look better when the rendering function can use curved arrows to avoid overlap&hellip;.)
 
 Note that other markings are possible, depending on the choices made (which nodes to start at, and the order in which to visit the edges out of each node). As another exercise, perform another traversal of this graph that produces a different marked-up result. Can you find a different topological ordering?
