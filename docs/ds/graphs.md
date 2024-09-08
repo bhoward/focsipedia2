@@ -526,6 +526,10 @@ val dfsB0 = showGraph(
 RenderFile(dfsB0, "DFSB0.png")
 ```
 
+```scala mdoc
+println(demoB)
+```
+
 We leave the details of tracing through the traversal as an exercise, but here is the final marked graph:
 
 ```scala mdoc:passthrough
@@ -559,147 +563,143 @@ Observe that all of the arrows go from left to right. (**TODO** This diagram wil
 
 Note that other markings are possible, depending on the choices made (which nodes to start at, and the order in which to visit the edges out of each node). As another exercise, perform another traversal of this graph that produces a different marked-up result. Can you find a different topological ordering?
 
-### ReasonML Implementation of Depth-First Traversal
+### Scala Implementation of Depth-First Traversal
 
 To write the depth-first traversal as a pure functional program, we do not want to store the extra information (visited and finished lists, and the categorization of the edges) in mutable data structures.
-Instead, we will pass around a ReasonML **record** containing the state.
-The syntax for records is very much like that in JavaScript: it consists of a comma-separated set of fields of the form `label: value` inside a pair of curly brackets.
-To access the field `x` of record `r` we use `r.x`.
-To create a new record as a copy of `r`, with field `x` updated to `v`, we write `{...r, x: v}`.
+Instead, we will pass around a **record** containing the state; in Scala, this will be implemented using a **case class**.
+The fields of a case class object are immutable, so if we want to change the field `x` of record `r` we need to make a copy of the object with that field modified: `r.copy(x = v)`.
 
-```reason edit
-type state('n) = {
-  visited: list('n),
-  finished: list('n),
-  tree: list(('n, 'n)),
-  forward: list(('n, 'n)),
-  back: list(('n, 'n))
-};
+```scala mdoc
+case class State[T](
+  visited: List[T],
+  finished: List[T],
+  tree: List[(T, T)],
+  forward: List[(T, T)],
+  back: List[(T, T)]
+)
 
-type dfsResult('n) = Cycle(('n, 'n)) | TopoOrder(list('n));
+enum DFSResult[T]:
+  case Cycle(backEdge: (T, T))
+  case TopoOrder(nodes: List[T])
 
-let depthFirst = ((nodes, adjList)) => {
-  let chooseUnvisited = visited => {
-    let unvisited = List.filter(node => !(List.mem(node, visited)), nodes);
-    switch (unvisited) {
-    | [] => None
-    | [head, ..._] => Some(head)
-    }
-  };
+def depthFirst[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
+  def chooseUnvisited(visited: List[T]): Option[T] = {
+    g.nodes.filter(node => !visited.contains(node)) match
+      case Nil => None
+      case head :: tail => Some(head)
+  }
 
-  let rec dfs = (node, state) => {
-    let neighbors = adjList(node);
-    let state' = List.fold_left((s, n) => {
-        if (List.mem(n, s.finished)) {
-          {...s, forward: [(node, n), ...s.forward]}
-        } else if (List.mem(n, s.visited)) {
-          {...s, back: [(node, n), ...s.back]}
-        } else {
-          let s' = dfs(n, s);
-          {...s', tree: [(node, n), ...s'.tree]}
-        }
-      }, {...state, visited: [node, ...state.visited]}, neighbors);
-    {...state', finished: [node, ...state'.finished]}
-  };
-
-  let rec run = state => {
-    switch (chooseUnvisited(state.visited)) {
-    | None => {
-        let t = (nodes, state.tree);
-        switch (state.back) {
-        | [] => (TopoOrder(state.finished), t)
-        | [e, ..._] => (Cycle(e), t)
-        }
+  def dfs(node: T, state: State[T]): State[T] = {
+    val visitState = state.copy(visited = node :: state.visited)
+    val finishState = g.neighbors(node).foldLeft(visitState) { case (s, n) =>
+        if s.finished.contains(n) then
+          s.copy(forward = (node, n) :: s.forward)
+        else if s.visited.contains(n) then
+          s.copy(back = (node, n) :: s.back)
+        else
+          val s2 = dfs(n, s)
+          s2.copy(tree = (node, n) :: s2.tree)
       }
-    | Some(node) => run(dfs(node, state))
-    }
-  };
+    finishState.copy(finished = node :: finishState.finished)
+  }
 
-  let initialState = {
-    visited: [],
-    finished: [],
-    tree: [],
-    forward: [],
-    back: []
-  };
+  def run(state: State[T]): (DFSResult[T], Graph[T]) = {
+    chooseUnvisited(state.visited) match
+      case None =>
+        val t = Graph.Pairs(g.nodes, state.tree)
+        state.back match
+          case Nil => (DFSResult.TopoOrder(state.finished), t)
+          case e :: _ => (DFSResult.Cycle(e), t)
+      case Some(node) => run(dfs(node, state))
+  }
+
+  val initialState = State[T](Nil, Nil, Nil, Nil, Nil)
 
   run(initialState)
-};
+}
 
-depthFirst(adjlist_of_pairs(demo));
-depthFirst(adjlist_of_pairs(demo2));
+println(depthFirst(demo))
+println(depthFirst(demoB))
 ```
 
-The returned value from `depthFirst` is a pair of a `dfsResult` and a `graphPairs`.
-The `dfsResult` is either `Cycle(e)`, where `e` is a back edge (pair of nodes) causing a cycle, or `TopoOrder(nodes)`, where `nodes` is a list of the graph nodes in topological order.
-The `graphPairs` value is the subgraph consisting of just the tree nodes.
+The returned value from `depthFirst` is a pair of a `DFSResult` and a `Graph`.
+The `DFSResult` is either `Cycle(e)`, where `e` is a back edge (pair of nodes) causing a cycle, or `TopoOrder(nodes)`, where `nodes` is a list of the graph nodes in topological order.
+The `Graph` value is the subgraph consisting of just the tree nodes.
 
-Instead of using the recursive helper function `dfs`, which performs a single depth-first exploration starting from a given node, we may perform all of the exploration in the (tail-recursive) helper function `run` by using an explicit stack to keep track of the current path from the starting node. Each entry in the stack can be one of three values: `Visit(n)` says that the current task is to visit node `n`; `Finish(n)` says that the current task is to finish node `n` (note that this is pushed on the stack underneath all of the edges out of `n`, so it will only be done after all of the neighbors are processed); and `Edge(n1, n2)` says that the current task is to consider the edge from `n1` to `n2`. The `run` helper function can now be seen as a loop that continually removes a task from the stack and then updates the stack and the state to perform that task:
-```reason edit
-type dfsStackItem('n) = Visit('n) | Finish('n) | Edge('n, 'n);
+Instead of using the recursive helper function `dfs`, which performs a single depth-first exploration starting from a given node, we may perform all of the exploration in the (tail-recursive) helper function `run` by using an explicit stack to keep track of the current path from the starting node.
+Each entry in the stack can be one of three values:
+* `Visit(n)` says that the current task is to visit node `n`;
+* `Finish(n)` says that the current task is to finish node `n` (note that this is pushed on the stack underneath all of the edges out of `n`, so it will only be done after all of the neighbors are processed); and
+* `Edge(n1, n2)` says that the current task is to consider the edge from `n1` to `n2`.
 
-let depthFirst2 = ((nodes, adjList)) => {
-  let chooseUnvisited = visited => {
-    let unvisited = List.filter(node => !(List.mem(node, visited)), nodes);
-    switch (unvisited) {
-    | [] => None
-    | [head, ..._] => Some(head)
-    }
-  };
+The `run` helper function can now be seen as a loop that continually removes a task from the stack and then updates the stack and the state to perform that task:
 
-  let rec run = (stack, state) => {
-    if (Stack.is_empty(stack)) {
-      switch (chooseUnvisited(state.visited)) {
-      | None => {
-          let t = (nodes, state.tree);
-          switch (state.back) {
-          | [] => (TopoOrder(state.finished), t)
-          | [e, ..._] => (Cycle(e), t)
-          }
-        }
-      | Some(node) => {
-          Stack.push(Visit(node), stack);
-          run(stack, state)
-        }
+```scala mdoc
+enum DFSStackItem[T]:
+  case Visit(node: T)
+  case Finish(node: T)
+  case Edge(node1: T, node2: T)
+import DFSStackItem.*
+
+type Stack[T] = List[DFSStackItem[T]]
+
+def depthFirst2[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
+  def chooseUnvisited(visited: List[T]): Option[T] = {
+    g.nodes.filter(node => !visited.contains(node)) match
+      case Nil => None
+      case head :: tail => Some(head)
+  }
+
+  def dfs(node: T, state: State[T]): State[T] = {
+    val visitState = state.copy(visited = node :: state.visited)
+    val finishState = g.neighbors(node).foldLeft(visitState) { case (s, n) =>
+        if s.finished.contains(n) then
+          s.copy(forward = (node, n) :: s.forward)
+        else if s.visited.contains(n) then
+          s.copy(back = (node, n) :: s.back)
+        else
+          val s2 = dfs(n, s)
+          s2.copy(tree = (node, n) :: s2.tree)
       }
-    } else {
-      switch (Stack.pop(stack)) {
-      | Visit(n) => {
-          Stack.push(Finish(n), stack);
-          let neighbors = adjList(n);
-          List.iter(n2 => Stack.push(Edge(n, n2), stack), neighbors);
-          run(stack, {...state, visited: [n, ...state.visited]})
-        }
-      | Finish(n) => {
-          run(stack, {...state, finished: [n, ...state.finished]})
-        }
-      | Edge(n1, n2) => {
-          if (List.mem(n2, state.finished)) {
-            run(stack, {...state, forward: [(n1, n2), ...state.forward]})
-          } else if (List.mem(n2, state.visited)) {
-            run(stack, {...state, back: [(n1, n2), ...state.back]})
-          } else {
-            Stack.push(Visit(n2), stack);
-            run(stack, {...state, tree: [(n1, n2), ...state.tree]})
-          }
-        }
-      }
-    }
-  };
+    finishState.copy(finished = node :: finishState.finished)
+  }
 
-  let initialState = {
-    visited: [],
-    finished: [],
-    tree: [],
-    forward: [],
-    back: []
-  };
+  def run(stack: Stack[T], state: State[T]): (DFSResult[T], Graph[T]) = {
+    stack match
+      case Nil =>
+        chooseUnvisited(state.visited) match
+          case None =>
+            val t = Graph.Pairs(g.nodes, state.tree)
+            state.back match
+              case Nil => (DFSResult.TopoOrder(state.finished), t)
+              case e :: _ => (DFSResult.Cycle(e), t)
+          case Some(node) =>
+            run(Visit(node) :: stack, dfs(node, state))
+      case top :: rest =>
+        top match
+          case Visit(node) =>
+            val edges = g.neighbors(node).map(node2 => Edge(node, node2))
+            val visitedState = state.copy(visited = node :: state.visited)
+            run(edges ::: Finish(node) :: rest, visitedState)
+          case Finish(node) =>
+            val finishedState = state.copy(finished = node :: state.finished)
+            run(rest, finishedState)
+          case Edge(node1, node2) =>
+            if state.finished.contains(node2) then
+              run(rest, state.copy(forward = (node1, node2) :: state.forward))
+            else if state.visited.contains(node2) then
+              run(rest, state.copy(back = (node1, node2) :: state.back))
+            else
+              run(Visit(node2) :: rest, state.copy(tree = (node1, node2) :: state.tree))
+  }
 
-  run(Stack.create(), initialState)
-};
+  val initialState = State[T](Nil, Nil, Nil, Nil, Nil)
 
-depthFirst2(adjlist_of_pairs(demo));
-depthFirst2(adjlist_of_pairs(demo2));
+  run(Nil, initialState)
+}
+
+println(depthFirst2(demo))
+println(depthFirst2(demoB))
 ```
 
 ### Breath-First Traversal
@@ -726,21 +726,23 @@ This is the smallest subset of edges that connects all of the nodes, with the le
 ## Exercises
 
 1. Give the list of pairs, adjacency list, and adjacency matrix representations for the following _undirected_ graph:
-```reason hidden
-let ex1 = (["A", "B", "C", "D"], [("A", "B"), ("B", "A"), ("A", "C"), ("C", "A"), ("B", "C"), ("C", "B"), ("A", "D"), ("D", "A")]);
-draw(renderLayout(layoutGrid(ex1, 2, 40.), s => s, defaultStyleNode, defaultStyleEdge));
+```scala mdoc:passthrough
+val ex1 = Graph.Pairs(List("A", "B", "C", "D"), List("A"->"B", "B"->"A", "A"->"C", "C"->"A", "B"->"C", "C"->"B", "A"->"D", "D"->"A"))
+val ex1img = showGraph(
+  ex1,
+  new GridNodeLayout(ex1.nodes, 2, 50),
+  new DefaultNodeImage(20),
+  new DefaultEdgeImage)
+RenderFile(ex1img, "GraphEx1.png")
 ```
 
 <details>
   <summary>Answer</summary>
 
-  ```reason hidden
-  print_string("Pairs\n");
-  showPairs(ex1, s => s);
-  print_string("Adjacency List:\n");
-  showAdjList(adjlist_of_pairs(ex1), s => s);
-  print_string("Adjacency Matrix:\n");
-  showAdjMatrix(adjmatrix_of_pairs(ex1), s => s);
+  ```
+    Pairs: {(A,B),(B,A),(A,C),(C,A),(B,C),(C,B),(A,D),(D,A)}
+    Adjacency List: [A:{B,C,D}; B:{A,C}; C:{A,B}; D:{A}]
+    Adjacency Matrix: [A:0111; B:1010; C:1100; D:1000]
   ```
 </details>
 
@@ -754,53 +756,41 @@ draw(renderLayout(layoutGrid(ex1, 2, 40.), s => s, defaultStyleNode, defaultStyl
 </details>
 
 3. (Based on a problem from Aho &amp; Ullman) Consider the following directed graph:
-```reason hidden
-let ex3 = (["a", "b", "c", "d", "e", "f"], [("a", "b"), ("a", "d"), ("b", "c"), ("b", "f"), ("c", "d"), ("d", "e"), ("e", "b"), ("e", "f"), ("f", "a")]);
-draw(renderLayout(layoutCircle(ex3, 40.), s => s, defaultStyleNode, defaultStyleEdge));
+
+```scala mdoc:passthrough
+val ex3 = Graph.Pairs(List("a", "b", "c", "d", "e", "f"), List("a"->"b", "a"->"d", "b"->"c", "b"->"f", "c"->"d", "d"->"e", "e"->"b", "e"->"f", "f"->"a"))
+val ex3img = showGraph(
+  ex3,
+  new CircleNodeLayout(ex3.nodes, 50),
+  new DefaultNodeImage(20),
+  new DefaultEdgeImage)
+RenderFile(ex3img, "GraphEx3.png")
 ```
 
    * Give two different depth-first traversal trees starting at node $a$. For each, also label the graph to show the forward and back edges, and the finishing number.
+```scala mdoc:invisible
+val ex3imgA = showGraph(
+  ex3,
+  new CircleNodeLayout(ex3.nodes, 50),
+  new DFSNodeImage(20, Nil, List("f", "e", "d", "c", "b", "a")),
+  new DFSEdgeImage(List("a"->"b", "b"->"c", "c"->"d", "d"->"e", "e"->"f"),
+    List("f"->"a", "e"->"b"), List("b"->"f", "a"->"d")))
+RenderFile(ex3imgA, "GraphEx3A.png")
+val ex3imgB = showGraph(
+  ex3,
+  new CircleNodeLayout(ex3.nodes, 50),
+  new DFSNodeImage(20, Nil, List("c", "f", "b", "e", "d", "a")),
+  new DFSEdgeImage(List("a"->"d", "d"->"e", "e"->"b", "b"->"c", "b"->"f"),
+    List("c"->"d", "f"->"a"), List("e"->"f", "a"->"b")))
+RenderFile(ex3imgB, "GraphEx3B.png")
+```
 
 <details>
   <summary>Answer</summary>
 
   Using depth-first traversal (others are possible):
-  ```reason hidden
-  let finishedNode = n => img => fill(Color("white"),
-    img +++ translate(12., 6., withFont(0.4, Serif, Regular, Normal, fill(color("black"), text(string_of_int(n))))));
-  let ns1 = node => switch (node) {
-  | "a" => finishedNode(6)
-  | "b" => finishedNode(5)
-  | "c" => finishedNode(4)
-  | "d" => finishedNode(3)
-  | "e" => finishedNode(2)
-  | "f" => finishedNode(1)
-  | _ => defaultStyleNode(node)
-  };
-  let es1 = (n1, n2) => switch (n1, n2) {
-  | ("a", "b") | ("b", "c") | ("c", "d") | ("d", "e") | ("e", "f") => treeEdge
-  | ("f", "a") | ("e", "b") => backEdge
-  | ("b", "f") | ("a", "d") => forwardEdge
-  | _ => defaultStyleEdge(n1, n2)
-  };
-  draw(renderLayout(layoutCircle(ex3, 40.), s => s, ns1, es1));
-  let ns2 = node => switch (node) {
-  | "a" => finishedNode(6)
-  | "b" => finishedNode(3)
-  | "c" => finishedNode(1)
-  | "d" => finishedNode(5)
-  | "e" => finishedNode(4)
-  | "f" => finishedNode(2)
-  | _ => defaultStyleNode(node)
-  };
-  let es2 = (n1, n2) => switch (n1, n2) {
-  | ("a", "d") | ("d", "e") | ("e", "b") | ("b", "c") | ("b", "f") => treeEdge
-  | ("c", "d") | ("f", "a") => backEdge
-  | ("e", "f") | ("a", "b") => forwardEdge
-  | _ => defaultStyleEdge(n1, n2)
-  };
-  draw(renderLayout(layoutCircle(ex3, 40.), s => s, ns2, es2));
-  ```
+  ![one dfs tree](/img/doodle/GraphEx3A.png)
+  ![another dfs tree](/img/doodle/GraphEx3B.png)
 </details>
 
    * Find the distance (length of the shortest path) from $a$ to each of the other nodes.
@@ -808,23 +798,7 @@ draw(renderLayout(layoutCircle(ex3, 40.), s => s, defaultStyleNode, defaultStyle
 <details>
   <summary>Answer</summary>
 
-  Using breadth-first traversal:
-  ```reason hidden
-  let ns3 = node => switch (node) {
-  | "a" => finishedNode(0)
-  | "b" => finishedNode(1)
-  | "c" => finishedNode(2)
-  | "d" => finishedNode(1)
-  | "e" => finishedNode(2)
-  | "f" => finishedNode(2)
-  | _ => defaultStyleNode(node)
-  };
-  let es3 = (n1, n2) => switch (n1, n2) {
-  | ("a", "b") | ("a", "d") | ("b", "c") | ("b", "f") | ("d", "e") => treeEdge
-  | _ => defaultStyleEdge(n1, n2)
-  };
-  draw(renderLayout(layoutCircle(ex3, 40.), s => s, ns3, es3));
-  ```
+  Using breadth-first traversal, we find that $b$ and $d$ are one unit away from $a$, while $c$, $d$, and $f$ are each two units away.
 </details>
 
 4. What would go wrong in Dijkstra's algorithm if we allowed edges with a negative cost? Give an example where it fails to find the shortest path.
