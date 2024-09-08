@@ -1,7 +1,6 @@
 * Revise Induction and Recursion sections (combine?) for 236
 
 * Write these sections:
-   + Balanced Binary Search Trees
    + Topological Sort and Connected Components
    + Shortest Paths; Minimum Spanning Trees
    + Transitive Closure

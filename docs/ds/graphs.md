@@ -682,20 +682,6 @@ def depthFirst2[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
       case head :: tail => Some(head)
   }
 
-  def dfs(node: T, state: State[T]): State[T] = {
-    val visitState = state.copy(visited = node :: state.visited)
-    val finishState = g.neighbors(node).foldLeft(visitState) { case (s, n) =>
-        if s.finished.contains(n) then
-          s.copy(forward = (node, n) :: s.forward)
-        else if s.visited.contains(n) then
-          s.copy(back = (node, n) :: s.back)
-        else
-          val s2 = dfs(n, s)
-          s2.copy(tree = (node, n) :: s2.tree)
-      }
-    finishState.copy(finished = node :: finishState.finished)
-  }
-
   def run(stack: Stack[T], state: State[T]): (DFSResult[T], Graph[T]) = {
     stack match
       case Nil =>
@@ -706,7 +692,7 @@ def depthFirst2[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
               case Nil => (DFSResult.TopoOrder(state.finished), t)
               case e :: _ => (DFSResult.Cycle(e), t)
           case Some(node) =>
-            run(Visit(node) :: stack, dfs(node, state))
+            run(Visit(node) :: stack, state)
       case top :: rest =>
         top match
           case Visit(node) =>
@@ -732,6 +718,70 @@ def depthFirst2[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
 
 println(depthFirst2(demo))
 println(depthFirst2(demoB))
+```
+
+### Equivalent Imperative Code
+
+Now that we have seen a pure functional approach to depth-first traversal, it is instructive to compare an imperative approach using mutable variables and data structures.
+Although we could have written this code to begin with, and it probably seems more familiar coming from a background of languages like Java, in general it is much harder to prove properties of imperative code.
+However, even if most of the code you write is in an imperative style, it pays to keep the functional style in mind as a guide to limiting the impact of mutability and preserving some ability to reason compositionally about program behavior.
+
+Here is the above code, still written in Scala but using variables, loops, and a mutable stack:
+
+```scala mdoc
+
+def depthFirst3[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
+  import scala.collection.mutable.Stack as MutStack
+  val stack: MutStack[DFSStackItem[T]] = MutStack.empty
+
+  var visited: List[T] = Nil
+  var finished: List[T] = Nil
+  var tree: List[(T, T)] = Nil
+  var forward: List[(T, T)] = Nil
+  var back: List[(T, T)] = Nil
+
+  def getUnvisited: List[T] = {
+    g.nodes.filter(node => !visited.contains(node))
+  }
+
+  var unvisited = getUnvisited
+  while unvisited.nonEmpty do
+    var start = unvisited.head
+    stack.push(Visit(start))
+
+    while stack.nonEmpty do
+      stack.pop() match
+        case Visit(node) =>
+          stack.push(Finish(node))
+          for node2 <- g.neighbors(node) do
+            stack.push(Edge(node, node2))
+          visited = node :: visited
+
+        case Finish(node) =>
+          finished = node :: finished
+          
+        case Edge(node1, node2) =>
+          if finished.contains(node2) then
+            forward = (node1, node2) :: forward
+          else if visited.contains(node2) then
+            back = (node1, node2) :: back
+          else
+            tree = (node1, node2) :: tree
+            stack.push(Visit(node2))
+    end while
+
+    unvisited = getUnvisited
+  end while
+  
+  val t = Graph.Pairs(g.nodes, tree)
+  if back.isEmpty then
+    (DFSResult.TopoOrder(finished), t)
+  else
+    (DFSResult.Cycle(back.head), t)
+}
+
+println(depthFirst3(demo))
+println(depthFirst3(demoB))
 ```
 
 ### Breath-First Traversal
