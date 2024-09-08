@@ -551,15 +551,47 @@ val demoC = Graph.Pairs(
     "E"->"C", "E"->"F", "F"->"D")
 )
 
+class CurvedEdgeImage[T](angleMap: Map[(T, T), Angle]) extends DefaultEdgeImage[T]:
+  override def apply(
+    node1: T, point1: Point,
+    node2: T, point2: Point,
+    nodeImage: NodeImage[T]
+  ): Image = {
+    if node1 != node2 && angleMap.isDefinedAt(node1->node2) then
+      val angle = angleMap(node1->node2)
+      val radius1 = nodeImage.radius(node1)
+      val radius2 = nodeImage.radius(node2)
+      val v = (point2 - point1).normalize
+      val p1 = point1 + v.rotate(-angle) * radius1
+      val c1 = point1 + v.rotate(-angle) * radius1 * 3
+      val p2 = point2 + v.rotate(angle) * -radius2
+      val c2 = point2 + v.rotate(angle) * -radius2 * 3
+      val p3 = p2 + v.rotate(angle + arrowAngle) * -arrowLength
+      val p4 = p2 + v.rotate(angle - arrowAngle) * -arrowLength
+      Image.path(OpenPath.empty
+        .moveTo(p1).curveTo(c1, c2, p2)
+        .moveTo(p2).lineTo(p3)
+        .moveTo(p2).lineTo(p4)
+      )
+    else
+      super.apply(node1, point1, node2, point2, nodeImage)
+  }
+
 val dfsC0 = showGraph(
   demoC,
   new GridNodeLayout(demoC.nodes, 6, 50),
-  new DFSNodeImage(20, List(), List()),
-  new DFSEdgeImage(List(), List(), List()))
+  new DefaultNodeImage(20),
+  new CurvedEdgeImage(Map(
+    ("A"->"C") -> -45.degrees,
+    ("B"->"C") -> -30.degrees,
+    ("E"->"C") -> 60.degrees,
+    ("F"->"D") -> 45.degrees)
+  )
+)
 RenderFile(dfsC0, "DFSC0.png")
 ```
 
-Observe that all of the arrows go from left to right. (**TODO** This diagram will look better when the rendering function can use curved arrows to avoid overlap&hellip;.)
+Observe that all of the arrows go from left to right.
 
 Note that other markings are possible, depending on the choices made (which nodes to start at, and the order in which to visit the edges out of each node). As another exercise, perform another traversal of this graph that produces a different marked-up result. Can you find a different topological ordering?
 
