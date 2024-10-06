@@ -729,7 +729,6 @@ However, even if most of the code you write is in an imperative style, it pays t
 Here is the above code, still written in Scala but using variables, loops, and a mutable stack:
 
 ```scala mdoc
-
 def depthFirst3[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
   import scala.collection.mutable.Stack as MutStack
   val stack: MutStack[DFSStackItem[T]] = MutStack.empty
@@ -746,8 +745,7 @@ def depthFirst3[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
 
   var unvisited = getUnvisited
   while unvisited.nonEmpty do
-    var start = unvisited.head
-    stack.push(Visit(start))
+    stack.push(Visit(unvisited.head))
 
     while stack.nonEmpty do
       stack.pop() match

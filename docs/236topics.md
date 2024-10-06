@@ -56,7 +56,7 @@ Note that it does not precisely follow the order in the book's table of contents
 
 ### Dynamic Programming
 
-### String Search
+### Edit Distance; Longest Common Subsequence
 
 ## Week 8: Advanced Algorithms.
 ### Hashtables and Bloom Filters
