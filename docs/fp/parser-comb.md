@@ -293,7 +293,7 @@ public class Demo {
 
 ## Parser Combinators
 
-Instead of giving a direct translation of the Java version into ReasonML, it is
+Instead of giving a direct translation of the Java version into Scala, it is
 common in functional languages to use what are known as **parser combinators**
 to write recursive descent parsers. A parser is viewed as a function from input
 to the pair of a result plus the remaining input (since in a functional language
@@ -301,299 +301,68 @@ we do not want to use side-effects to update the "current character" available f
 an input source). A parser combinator is then a function that can combine one or
 more of these parsing functions into a composite parser.
 
-For example, given parsers `p1` and `p2`, the combinator `<|>` produces the parser
-`p1 <|> p2` which attempts to parse according to `p1`; if it fails, then it attempts
+The example below uses the
+[FastParse combinator parsing library](https://com-lihaoyi.github.io/fastparse/).
+For example, given parsers `p1` and `p2`, the combinator `|` produces the parser
+`p1 | p2` which attempts to parse according to `p1`; if it fails, then it attempts
 to use `p2` instead. This corresponds to the $|$ (choice) operator in BNF (and also
-in regular expressions). Some of the other combinators used below are `<*>`, which
+in regular expressions). Some of the other combinators used below are `~`, which
 corresponds to sequencing one parser after another, and `rep`, which repeats a
 parser zero or more times (like the Kleene star).
-
-Here is code for parser combinators in ReasonML, based on
-[bs-little-parser](https://github.com/henoc/bs-little-parser):
-```reason edit
-module Input = {
-  type t = {text: string, index: int, whitespace: string};
-
-  let fromString = s => {text: s, index: 0, whitespace: " \t\n"};
-
-  let skipWhitespace = input => {
-    let whitespace = input.whitespace;
-    let spaceChars = List.init(String.length(whitespace), String.get(whitespace));
-    
-    let rec aux = input => {
-      if (String.length(input.text) <= input.index) {
-        input 
-      } else if (List.mem(input.text.[input.index], spaceChars)) {
-        aux({...input, index: input.index+1})
-      } else {
-        input
-      }
-    };
-    aux(input)
-  };
-
-  let atEnd = input => {
-    input.index == String.length(input.text)
-  };
-};
-
-module Result = {
-  type t('a, 'b) = Ok('a) | Error('b);
-
-  let map = (f, result) => {
-    switch (result) {
-    | Ok(r) => Ok(f(r))
-    | Error(s) => Error(s)
-    }
-  };
-
-  let get = result => {
-    switch (result) {
-    | Ok(r) => Some(r)
-    | _ => None
-    }
-  };
-};
-
-module Parser = {
-  type parseResult('a) = Result.t(('a, Input.t), (string, Input.t))
-  type t('a) = Input.t => parseResult('a);
-
-  let success = (result, input): parseResult('a) =>
-    Result.Ok((result, input));
-  
-  let failure = (message, input): parseResult('a) =>
-    Result.Error((message, input));
-
-  let ( <*> ) = (p: t('a), q: t('b), input) => {
-    switch (p(input)) {
-    | Result.Ok((result1, input2)) =>
-        switch (q(input2)) {
-        | Result.Ok((result2, input3)) =>
-            success((result1, result2), input3)
-        | Result.Error((message, input)) =>
-            failure(message, input)
-        }
-    | Result.Error((message, input)) =>
-        failure(message, input)
-    }
-  };
-
-  let ( <* ) = (p: t('a), q: t('b), input) => {
-    switch(p(input)) {
-    | Result.Ok((result1, input2)) =>
-        switch (q(input2)) {
-        | Result.Ok((_, input3)) =>
-            success(result1, input3)
-        | Result.Error((message, input)) =>
-            failure(message, input)
-        }
-    | Result.Error((message, input)) =>
-        failure(message, input)
-    }
-  };
-
-  let ( *> ) = (p: t('a), q: t('b), input) => {
-    switch(p(input)) {
-    | Result.Ok((_, input2)) =>
-        switch (q(input2)) {
-        | Result.Ok((result2, input3)) =>
-            success(result2, input3)
-        | Result.Error((message, input)) =>
-            failure(message, input)
-        }
-    | Result.Error((message, input)) =>
-        failure(message, input)
-    }
-  };
-
-  let ( <|> ) = (p: t('a), q: t('a), input) => {
-    switch (p(input)) {
-    | Result.Ok((s, t)) => success(s, t)
-    | _ => q(input)
-    }
-  };
-
-  let rep = (p: t('a), input) => {
-    let rec aux = (accum, input) => {
-      switch (p(input)) {
-      | Result.Ok((r, i)) => aux([r, ...accum], i)
-      | _ => success(List.rev(accum), input)
-      }
-    };
-
-    aux([], input);
-  };
-
-  let rep1 = (p: t('a)) => p <*> rep(p);
-
-  let opt = (p: t('a), input) => {
-    switch (p(input)) {
-    | Result.Ok((r, i)) => success(Some(r), i)
-    | _ => success(None, input)
-    }
-  };
-
-  let andPred = (p: t('a), input) => {
-    switch (p(input)) {
-    | Result.Ok((r, _)) => success(r, input)
-    | Result.Error((message, input)) => failure(message, input)
-    }
-  };
-
-  let notPred = (p: t('a), input) => {
-    switch (p(input)) {
-    | Result.Ok((_, i)) => failure("notPred failure", i)
-    | _ => success((), input)
-    }
-  };
-
-  let ( >> ) = (p: t('a), f, input) => {
-    switch (p(input)) {
-    | Result.Ok((r, i)) => f(r, i)
-    | Result.Error((message, input)) => failure(message, input)
-    }
-  };
-
-  let ( ^^ ) = (p: t('a), f, input): parseResult('b) =>
-    Result.map(((r, i)) => (f(r), i), p(input));
-
-  let chr = (c, rawInput) => {
-    let input = Input.skipWhitespace(rawInput);
-    if (Input.atEnd(input)) {
-      failure("not enough input", input)
-    } else {
-      let firstChar = input.text.[input.index];
-      if (firstChar == c) {
-        success(c, {...input, index: input.index+1})
-      } else {
-        failure(Printf.sprintf("mismatch: %C found, expected %C", firstChar, c), input)
-      }
-    }
-  };
-
-  let str = (s, rawInput) => {
-    let input = Input.skipWhitespace(rawInput);
-    let slen = String.length(s);
-    if (String.length(input.text) - slen < input.index) {
-      failure("not enough input", input)
-    } else {
-      let substr = String.sub(input.text, input.index, slen);
-      if (substr == s) {
-        success(s, {...input, index: input.index+slen})
-      } else {
-        failure(Printf.sprintf("mismatch: %S found, expected %S", substr, s), input)
-      }
-    }
-  };
-
-  let dfa = (init, step, finish, rawInput) => {
-    let input = Input.skipWhitespace(rawInput);
-    let rec aux = (state, i) => {
-      if (Input.atEnd(i)) {
-        (state, i)
-      } else {
-        let nextChar = i.text.[i.index];
-        switch (step(state, nextChar)) {
-        | Some(nextState) => aux(nextState, {...i, index: i.index+1})
-        | None => (state, i)
-        }
-      }
-    };
-    let (finalState, input2) = aux(init, input);
-    switch (finish(finalState)) {
-    | Ok(result) => success(result, input2)
-    | Error(message) => failure(message, input2)
-    }
-  };
-
-  let eoi = (rawInput) => {
-    let input = Input.skipWhitespace(rawInput);
-    let remain = String.length(input.text) - input.index;
-    if (remain == 0) {
-      success((), input)
-    } else {
-      failure(Printf.sprintf("unscanned input at end of parse: %S", String.sub(input.text, input.index, remain)), input)
-    }
-  };
-
-  let parse = (input, parser: t('a)) => {
-    parser(input)
-  };
-
-  let parseAll = (input, parser: t('a)) => {
-    (parser <* eoi)(input)
-  };
-
-  let test = (parser: t('a), s) => {
-    switch (parseAll(Input.fromString(s), parser)) {
-    | Result.Ok((r, _)) => r
-    | Result.Error((m, _)) => failwith(m)
-    }
-  }
-};
-```
+The `map` operations take the result of parsing a particular rule and construct the
+desired abstract syntax tree of type `Expr`.
 
 Here is the parser for arithmetic expressions, corresponding to the Java example above.
 Note how the definitions of `expr`, `term`, and `factor` are very close to the original BNF:
-```reason edit
-open Parser;
+```scala
+package test
 
-type exp =
-  | Ident(string)
-  | Num(int)
-  | BinOp(exp, char, exp);
+enum Expr:
+  case Ident(name: String)
+  case Num(value: Int)
+  case BinOp(left: Expr, op: String, right: Expr)
+import Expr.*
 
-let isLetter = c => ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-let isDigit = c => ('0' <= c && c <= '9');
-let isLetterOrDigit = c => isLetter(c) || isDigit(c);
+import fastparse._, SingleLineWhitespace._
 
-let ident = dfa(
-  "",
-  (s, c) => if ((s == "" && isLetter(c)) || (s != "" && isLetterOrDigit(c))) {
-      Some(s ++ String.make(1, c))
-    } else {
-      None
-    },
-  s => if (s == "") {
-      Error("expected identifier")
-    } else {
-      Ok(Ident(s))
-    }
-);
-
-let number = dfa(
-  "",
-  (s, c) => if (isDigit(c)) {
-    Some(s ++ String.make(1, c))
-  } else {
-    None
-  },
-  s => if (s == "") {
-    Error("expected number")
-  } else {
-    Ok(Num(int_of_string(s)))
+object ExprParse:
+  def apply(input: String): Either[String, Expr] = {
+    parse(input, { case given P[_] => top }) match
+    case Parsed.Success(value, _) => Right(value)
+    case result: Parsed.Failure => Left(result.msg)
   }
-);
+    
+  def top[$: P]: P[Expr] = P ( Start ~ expr ~ End )
 
-let addop = chr('+') <|> chr('-');
-let mulop = chr('*') <|> chr('/');
+  def expr[$: P]: P[Expr] = P( term ~ (addOp ~ term).rep )
+    .map { case (t, rest) => rest.foldLeft(t) { case (e1, (op, e2)) => BinOp(e1, op, e2) }}
 
-let rec expr = input => (
-  (term <*> rep(addop <*> term))
-  ^^ ((t, ts)) => List.fold_left((l, (op, r)) => BinOp(l, op, r), t, ts)
-)(input)
-and term = input => (
-  (factor <*> rep(mulop <*> factor))
-  ^^ ((f, fs)) => List.fold_left((l, (op, r)) => BinOp(l, op, r), f, fs)
-)(input)
-and factor = input => (
-  ident
-  <|> number
-  <|> (chr('(') *> expr <* chr(')'))
-)(input);
+  def term[$: P]: P[Expr] = P( factor ~ (mulOp ~ factor).rep )
+    .map { case (f, rest) => rest.foldLeft(f) { case (e1, (op, e2)) => BinOp(e1, op, e2) }}
 
-let sample = "  3*abc + (x1 - x0) * r2d2/42 \n";
-Result.get(parseAll(Input.fromString(sample), expr));
-test(expr, sample);
+  def factor[$: P]: P[Expr] = P( id | num | "(" ~ expr ~ ")" )
+
+  def id[$: P]: P[Expr] = P( ident.map(Ident(_)) )
+
+  def num[$: P]: P[Expr] = P( number.map(n => Num(n.toInt)) )
+
+  // Lexical Syntax
+  def ident[$: P] = P( CharIn("A-Za-z").! ~~ CharsWhileIn("A-Za-z0-9").?.! )
+    .map { case (init, rest) => init + rest }
+
+  def number[$: P] = P( ("-".? ~~ CharsWhileIn("0-9")).! )
+
+  def addOp[$: P] = P( ("+" | "-").! )
+
+  def mulOp[$: P] = P( ("*" | "/").! )
+
+  @main def demo(): Unit = {
+    val input = "a*x*x + b*x + c"
+
+    ExprParse(input) match
+        case Right(expr) =>
+          println(expr)
+        case Left(message) =>
+          println("Error: " + message)
+  }
 ```
