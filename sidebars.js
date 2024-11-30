@@ -55,6 +55,7 @@ const sidebars = {
       'fp/state',
       'fp/parser-comb',
       'fp/lambda',
+      'fp/recursive'
     ],
     'Lists, Trees, and Graphs': [
       'ds/lists',

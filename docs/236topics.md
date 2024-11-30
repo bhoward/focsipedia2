@@ -95,6 +95,6 @@ Note that it does not precisely follow the order in the book's table of contents
 ### [Lambda Calculus](fp/lambda.md)
 
 ## Week 14: Recursive Functions. Wrap-up.
-### Recursive Functions
+### [Recursive Functions](fp/recursive.md)
 
 ### Church-Turing Thesis
