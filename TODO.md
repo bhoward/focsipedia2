@@ -16,4 +16,4 @@
    + NP Completeness
    + Amortized Analysis
    + Knuth-Morris-Pratt
-   + Recursive Functions
+ 
