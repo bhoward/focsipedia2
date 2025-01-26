@@ -22,7 +22,7 @@ appropriate when a large task can be broken into subtasks where
 some or all of the subtasks are smaller, simpler versions of the
 main task.
 
-Like induction, recursion is often considered to be a "hard"
+Like induction, recursion is sometimes considered to be a "hard"
 topic by students, and some professors perpetuate this by
 referring to it as a "trick," and implying that some sort of
 magic is needed for it to work. However, if you are comfortable
@@ -50,11 +50,11 @@ For example, $5!=1\cdot2\cdot3\cdot4\cdot5=120$. Note that for $n>1$,
 
 $$
 \begin{array}{l}
-n! = \prod_{i=1}^n\,i = \left(\prod_{i=1}^{n-1}\,i\right)\cdot n = \big((n-1)!\big)\cdot n
+n! = \prod_{i=1}^n\,i = \left(\prod_{i=1}^{n-1}\,i\right)\cdot n = (n-1)!\cdot n
 \end{array}
 $$
 
-It is also true that $n!=\big((n-1)!\big)\cdot n$ when $n=1$. This observation
+It is also true that $n!=(n-1)!\cdot n$ when $n=1$. This observation
 makes it possible to write a recursive function to compute $n!$.
 
 Here is how we might write it in Java:
@@ -108,29 +108,29 @@ natural number $n$. (If we are using the Java version, we need to add
 the assumption that $n!$ fits within a 32-bit integer.)
 
 > **Proof:** 
-Let $P(n)$ be the statement "_factorial_($n$) correctly computes $n!$."
-We use induction to prove that $P(n)$ is true for all natural numbers $n$.
+> Let $P(n)$ be the statement "_factorial_($n$) correctly computes $n!$."
+> We use induction to prove that $P(n)$ is true for all natural numbers $n$.
 >
-**Base case:** In the case $n=0$, the _if_ statement in the function
-assigns the value 1 to the answer. Since 1 is the correct value of
-$0!$, _factorial_(0) correctly computes $0!$.
+> **Base case:** In the case $n=0$, the _if_ statement in the function
+> assigns the value 1 to the answer. Since 1 is the correct value of
+> $0!$, _factorial_(0) correctly computes $0!$.
 >
-**Inductive case:** Let $k$ be an arbitrary natural number, and assume that
-$P(k)$ is true. From this assumption, we must show that $P(k+1)$ is true.
-The assumption is that _factorial_($k$) correctly computes $k!$,
-and we want to show that _factorial_($k+1$) correctly computes
-$(k+1)!$.
+> **Inductive case:** Let $k$ be an arbitrary natural number, and assume that
+> $P(k)$ is true. From this assumption, we must show that $P(k+1)$ is true.
+> The assumption is that _factorial_($k$) correctly computes $k!$,
+> and we want to show that _factorial_($k+1$) correctly computes
+> $(k+1)!$.
 >
-When the function computes _factorial_($k+1$), the value of
-the parameter $n$ is $k+1$.
-Since $k+1>0$, the _if_ statement in the function computes the
-value of _factorial_($k+1$) by applying the computation
-_factorial_$(k)*(k+1)$. We know, by the induction hypothesis,
-that the value computed by _factorial_($k$) is $k!$.
-It follows that the value computed by _factorial_($k+1$)
-is $(k!)\cdot(k+1)$. As we observed above, for any $k+1>0$,
-$(k!)\cdot(k+1)=(k+1)!$. We see that _factorial_($k+1$)
-correctly computes $(k+1)!$. This completes the induction.
+> When the function computes _factorial_($k+1$), the value of
+> the parameter $n$ is $k+1$.
+> Since $k+1>0$, the _if_ statement in the function computes the
+> value of _factorial_($k+1$) by applying the computation
+> _factorial_$(k)*(k+1).$ We know, by the induction hypothesis,
+> that the value computed by _factorial_($k$) is $k!$.
+> It follows that the value computed by _factorial_($k+1$)
+> is $k!\cdot(k+1)$. As we observed above, for any $k+1>0$,
+> $k!\cdot(k+1)=(k+1)!$. We see that _factorial_($k+1$)
+> correctly computes $(k+1)!$. This completes the induction.
 
 In this proof, we see that the base case of the induction corresponds
 to the base case of the recursion, while the inductive case corresponds
@@ -185,14 +185,14 @@ void Hanoi(int n, int A, int B, int C) {
 }
 ```
 
-Again, here is equivalent code in Scala:[^2]
+Again, here is equivalent code in Scala:
 ```scala mdoc
 def hanoi(n: Int, a: Int, b: Int, c: Int): Unit = {
   if n == 1 then
-    printf("Move disk %d from pile %d to pile %d\n", n, a, b)
+    println(s"Move disk $n from pile $a to pile $b")
   else
     hanoi(n - 1, a, c, b)
-    printf("Move disk %d from pile %d to pile %d\n", n, a, b)
+    println(s"Move disk $n from pile $a to pile $b")
     hanoi(n - 1, c, b, a)
 }
 
@@ -203,42 +203,42 @@ We can use induction to prove that this subroutine does in
 fact solve the Towers of Hanoi problem.
 
 > **Theorem:** 
-The sequence of moves printed by the _Hanoi_ subroutine as given above
-correctly solves the Towers of Hanoi problem for any integer $n\ge1$.
+> The sequence of moves printed by the _Hanoi_ subroutine as given above
+> correctly solves the Towers of Hanoi problem for any integer $n\ge1$.
 
 > **Proof:** 
-We prove by induction that whenever $n$ is a positive integer and
-$A$, $B$, and $C$ are the numbers 1, 2, and 3 in some order, 
-the subroutine call _Hanoi_($n,A,B,C$)
-prints a sequence of moves that will move $n$ disks from pile $A$ to
-pile $B$, following all the rules of the Towers of Hanoi problem.
+> We prove by induction that whenever $n$ is a positive integer and
+> $A$, $B$, and $C$ are the numbers 1, 2, and 3 in some order, 
+> the subroutine call _Hanoi_($n,A,B,C$)
+> prints a sequence of moves that will move $n$ disks from pile $A$ to
+> pile $B$, following all the rules of the Towers of Hanoi problem.
 >
-**Base case:** In the base case, $n=1$,
-the subroutine call _Hanoi_($1,A,B,C$) prints out the single
-step "Move disk 1 from pile A to pile B," and this move does solve
-the problem for 1 disk.
+> **Base case:** In the base case, $n=1$,
+> the subroutine call _Hanoi_($1,A,B,C$) prints out the single
+> step "Move disk 1 from pile A to pile B," and this move does solve
+> the problem for 1 disk.
 >
-**Inductive case:** Let $k$ be an arbitrary positive integer, and suppose that
-_Hanoi_($k,A,B,C$) correctly solves the problem 
-of moving the $k$ disks from pile $A$ to pile $B$ using pile $C$ as the spare,
-whenever $A$, $B$, and $C$ are the numbers 1, 
-2, and 3 in some order. We need to show that 
-_Hanoi_($k+1,A,B,C$) correctly solves the problem for
-$k+1$ disks. Since $k+1>1$, _Hanoi_($k+1,A,B,C$) begins by
-calling _Hanoi_($k,A,C,B$). By the induction hypothesis,
-this correctly moves $k$ disks from pile $A$ to pile $C$. Disk number
-$k+1$ is not moved during this process.
-At that point, pile $C$ contains the $k$ smallest disks and
-pile $A$ still contains the $(k+1)^{st}$ disk, which has not
-yet been moved. So the next move printed by the subroutine,
-"Move disk $(k+1)$ from pile A to pile B," is legal because pile $B$ is empty.
-Finally, the subroutine calls _Hanoi_($k,C,B,A$),
-which, by the induction hypothesis, correctly moves the $k$ smallest disks from 
-pile $C$ to pile $B$, putting
-them on top of the $(k+1)^{\text{st}}$ disk, which does not move during this process.
-At that point, all $(k+1)$
-disks are on pile $B$, so the problem for
-$k+1$ disks has been correctly solved.
+> **Inductive case:** Let $k$ be an arbitrary positive integer, and suppose that
+> _Hanoi_($k,A,B,C$) correctly solves the problem 
+> of moving the $k$ disks from pile $A$ to pile $B$ using pile $C$ as the spare,
+> whenever $A$, $B$, and $C$ are the numbers 1, 
+> 2, and 3 in some order. We need to show that 
+> _Hanoi_($k+1,A,B,C$) correctly solves the problem for
+> $k+1$ disks. Since $k+1>1$, _Hanoi_($k+1,A,B,C$) begins by
+> calling _Hanoi_($k,A,C,B$). By the induction hypothesis,
+> this correctly moves $k$ disks from pile $A$ to pile $C$. Disk number
+> $k+1$ is not moved during this process.
+> At that point, pile $C$ contains the $k$ smallest disks and
+> pile $A$ still contains the $(k+1)^{st}$ disk, which has not
+> yet been moved. So the next move printed by the subroutine,
+> "Move disk $(k+1)$ from pile A to pile B," is legal because pile $B$ is empty.
+> Finally, the subroutine calls _Hanoi_($k,C,B,A$),
+> which, by the induction hypothesis, correctly moves the $k$ smallest disks from 
+> pile $C$ to pile $B$, putting
+> them on top of the $(k+1)^{\text{st}}$ disk, which does not move during this process.
+> At that point, all $(k+1)$
+> disks are on pile $B$, so the problem for
+> $k+1$ disks has been correctly solved.
 
 ## Binary Trees
 
@@ -333,41 +333,41 @@ We can use the second ("strong") form of the principle of mathematical induction
 to prove that this function is correct.
 
 > **Theorem:** 
-The function _TreeSum_, defined above, correctly
-computes the sum of all the integers in a binary tree.
+> The function _TreeSum_, defined above, correctly
+> computes the sum of all the integers in a binary tree.
 
 > **Proof:** 
-We use induction on the number of nodes in the tree.
-Let $P(n)$ be the statement "_TreeSum_
-correctly computes the sum of the nodes in any binary tree
-that contains exactly $n$ nodes." We show that $P(n)$ is true
-for every natural number $n$.
+> We use induction on the number of nodes in the tree.
+> Let $P(n)$ be the statement "_TreeSum_
+> correctly computes the sum of the nodes in any binary tree
+> that contains exactly $n$ nodes." We show that $P(n)$ is true
+> for every natural number $n$.
 >
-**Base case:** Consider the case $n=0$. A tree with zero nodes is empty,
-and an empty tree is represented by a _null_ pointer.
-In this case, the _if_ statement in the definition of
-_TreeSum_ assigns the value 0 to the answer, and this is
-the correct sum for an empty tree. So, $P(0)$ is true.
+> **Base case:** Consider the case $n=0$. A tree with zero nodes is empty,
+> and an empty tree is represented by a _null_ pointer.
+> In this case, the _if_ statement in the definition of
+> _TreeSum_ assigns the value 0 to the answer, and this is
+> the correct sum for an empty tree. So, $P(0)$ is true.
 >
-**Induction case:** Let $k$ be an arbitrary natural number, with $k>0$.
-Suppose we already
-know $P(x)$ for each natural number $x$ with $0\le x < k$. That is,
-_TreeSum_ correctly computes the sum of all the integers in
-any tree that has fewer than $k$ nodes. We must show that it follows
-that $P(k)$ is true, that is, that _TreeSum_ works for 
-a tree with $k$ nodes. Suppose that _root_ is a pointer
-to the root node of a tree that has a total of $k$ nodes.
-Since the root node counts as a node, that leaves a total of
-$k-1$ nodes for the left and right subtrees, so each subtree
-must contain fewer than $k$ nodes. By the induction hypothesis,
-we know that _TreeSum_(_root.left_) correctly
-computes the sum of all the integers in the left subtree, and
-_TreeSum_(_root.right_) correctly computes the
-sum of all the integers in the right subtree. The sum of all
-the integers in the tree is _root.item_ plus the
-sums of the integers in the subtrees, and this is the value
-computed by _TreeSum_. So, _TreeSum_ does
-work for a tree with $k$ nodes. This completes the induction.
+> **Induction case:** Let $k$ be an arbitrary natural number, with $k>0$.
+> Suppose we already
+> know $P(x)$ for each natural number $x$ with $0\le x < k$. That is,
+> _TreeSum_ correctly computes the sum of all the integers in
+> any tree that has fewer than $k$ nodes. We must show that it follows
+> that $P(k)$ is true, that is, that _TreeSum_ works for 
+> a tree with $k$ nodes. Suppose that _root_ is a pointer
+> to the root node of a tree that has a total of $k$ nodes.
+> Since the root node counts as a node, that leaves a total of
+> $k-1$ nodes for the left and right subtrees, so each subtree
+> must contain fewer than $k$ nodes. By the induction hypothesis,
+> we know that _TreeSum_(_root.left_) correctly
+> computes the sum of all the integers in the left subtree, and
+> _TreeSum_(_root.right_) correctly computes the
+> sum of all the integers in the right subtree. The sum of all
+> the integers in the tree is _root.item_ plus the
+> sums of the integers in the subtrees, and this is the value
+> computed by _TreeSum_. So, _TreeSum_ does
+> work for a tree with $k$ nodes. This completes the induction.
 
 Note how closely the structure of the inductive proof follows the 
 structure of the recursive function. In particular, the
@@ -398,30 +398,30 @@ Here is the proof about the _TreeSum_ function again, expressed as a
 structural induction over trees:
 
 > **Theorem:** 
-The function _TreeSum_, defined above, correctly
-computes the sum of all the integers in a binary tree.
+> The function _TreeSum_, defined above, correctly
+> computes the sum of all the integers in a binary tree.
 
 > **Proof:** 
-We use structural induction on the construction of a tree.
-Let $P(t)$ be the statement "_TreeSum_
-correctly computes the sum of the nodes in the binary tree
-$t$." We show that $P(t)$ is true
-for every binary tree $t$.
+> We use structural induction on the construction of a tree.
+> Let $P(t)$ be the statement "_TreeSum_
+> correctly computes the sum of the nodes in the binary tree
+> $t$." We show that $P(t)$ is true
+> for every binary tree $t$.
 >
-**Base case:** If $t$ is an empty tree, then the definition of
-_TreeSum_ returns the value 0, which is the correct sum for an
-empty tree. So, $P(t)$ is true.
+> **Base case:** If $t$ is an empty tree, then the definition of
+> _TreeSum_ returns the value 0, which is the correct sum for an
+> empty tree. So, $P(t)$ is true.
 >
-**Induction case:** Suppose we already know that $P(u)$ and $P(v)$ hold for some
-trees $u$ and $v$. That is, _TreeSum_ correctly computes the sum of all the
-integers in $u$ and $v$. We must show that it follows that $P(t)$ is true, where
-$t$ is the tree constructed from subtrees $u$ (left) and $v$ (right), plus an
-integer _item_. The value computed by _TreeSum_($t$) will be _TreeSum_($u$) +
-_item_ + _TreeSum_($v$). By the induction hypothesis, we know that
-_TreeSum_($u$) correctly computes the sum of all the integers in the left
-subtree, and _TreeSum_($v$) correctly computes the sum of all the integers in
-the right subtree. The sum of all the integers in the tree is _item_ plus the
-sums of the integers in the subtrees, so, _TreeSum_ also works for the tree $t$.
+> **Induction case:** Suppose we already know that $P(u)$ and $P(v)$ hold for some
+> trees $u$ and $v$. That is, _TreeSum_ correctly computes the sum of all the
+> integers in $u$ and $v$. We must show that it follows that $P(t)$ is true, where
+> $t$ is the tree constructed from subtrees $u$ (left) and $v$ (right), plus an
+> integer _item_. The value computed by _TreeSum_($t$) will be _TreeSum_($u$) +
+> _item_ + _TreeSum_($v$). By the induction hypothesis, we know that
+> _TreeSum_($u$) correctly computes the sum of all the integers in the left
+> subtree, and _TreeSum_($v$) correctly computes the sum of all the integers in
+> the right subtree. The sum of all the integers in the tree is _item_ plus the
+> sums of the integers in the subtrees, so, _TreeSum_ also works for the tree $t$.
 
 ## Recursive Definitions
 
@@ -464,40 +464,40 @@ for example, that $f_n$ grows exponentially with $n$, even without
 finding an exact formula for $f_n$:
 
 > **Theorem:** 
-The Fibonacci sequence, $f_0$, $f_1$, $f_2$, &hellip;,
-satisfies $f_n > \big(\frac{3}{2}\big)^{n-1}$, for $n\ge6$.
+> The Fibonacci sequence, $f_0$, $f_1$, $f_2$, &hellip;,
+> satisfies $f_n > \big(\frac{3}{2}\big)^{n-1}$, for $n\ge6$.
 
 > **Proof:** 
-We prove this by induction on $n$. For $n=6$, we have that 
-$f_n=8$ while $1.5^{n-1}=1.5^5$, which is about $7.6$.
-So $f_n > 1.5^{n-1}$ for $n=6$.
-Similarly, for $n=7$, we have $f_n=13$ and
-$1.5^{n-1}=1.5^6$, which is about 11.4.
-So $f_n > 1.5^{n-1}$ for $n=7$.
+> We prove this by induction on $n$. For $n=6$, we have that 
+> $f_n=8$ while $1.5^{n-1}=1.5^5$, which is about $7.6$.
+> So $f_n > 1.5^{n-1}$ for $n=6$.
+> Similarly, for $n=7$, we have $f_n=13$ and
+> $1.5^{n-1}=1.5^6$, which is about 11.4.
+> So $f_n > 1.5^{n-1}$ for $n=7$.
 >
-Now suppose that $k$ is an arbitrary integer with $k>7$.
-Suppose that we already know that $f_n>1.5^{n-1}$ for
-$n=k-1$ and for $n=k-2$. We want to show that the inequality
-then holds for $n=k$ as well. But
-$$
-\begin{array}{rll}
-   f_k &= f_{k-1}+f_{k-2}\\
-       &> 1.5^{(k-1)-1}+1.5^{(k-2)-1} & \text{(by the induction hypothesis)}\\
-       &= 1.5^{k-2}+1.5^{k-3}\\
-       &= (1.5)\cdot(1.5^{k-3}) + (1.5^{k-3})\\
-       &= (2.5)\cdot(1.5^{k-3})\\
-       &> (1.5^2)\cdot(1.5^{k-3}) & \text{(since $1.5^2=2.25$)}\\
-       &= 1.5^{k-1}
-\end{array}
-$$
+> Now suppose that $k$ is an arbitrary integer with $k>7$.
+> Suppose that we already know that $f_n>1.5^{n-1}$ for
+> $n=k-1$ and for $n=k-2$. We want to show that the inequality
+> then holds for $n=k$ as well. But
+> $$
+> \begin{array}{rll}
+>    f_k &= f_{k-1}+f_{k-2}\\
+>        &> 1.5^{(k-1)-1}+1.5^{(k-2)-1} & \text{(by the induction hypothesis)}\\
+>        &= 1.5^{k-2}+1.5^{k-3}\\
+>        &= (1.5)\cdot(1.5^{k-3}) + (1.5^{k-3})\\
+>        &= (2.5)\cdot(1.5^{k-3})\\
+>        &> (1.5^2)\cdot(1.5^{k-3}) & \text{(since $1.5^2=2.25$)}\\
+>        &= 1.5^{k-1}
+> \end{array}
+> $$
 > This string of equalities and inequalities shows that $f_k>1.5^{k-1}$.
-This completes the induction and proves the theorem.
+> This completes the induction and proves the theorem.
 
 
 ## Exercises
 
 1. The _Hanoi_ subroutine given in this section does
-not just solve the Towers of Hanoi problem. It solves the
+not just find _some_ solution to the Towers of Hanoi problem. It solves the
 problem using the minimum possible number of moves. Use induction
 to prove this fact.
 <details>

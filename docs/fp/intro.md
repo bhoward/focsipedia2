@@ -35,8 +35,8 @@ and whose domain is _int_.
 In the usual notation for functions, we would express this as
 $\textit{cube}\colon \textit{int}\to\textit{int}$,
 or possibly as $\textit{cube}\in{\textit{int}}^{\textit{\small{int}}}$,
-where ${\textit{int}}^{\textit{\small{int}}}$ is the set of all
-functions that map the set _int_ to the set _int_.
+where $B^A$ is the set of all
+functions that map the set _A_ to the set _B_.
 
 The first line of the function, `int cube(int n)`, is called
 the **signature** of the function (in some languages, such as C++, it
@@ -71,7 +71,7 @@ There are some cosmetic differences from Java:
 * Method definitions begin with the keyword `def`
 * Basic types such as `int` are written with an initial capital letter: `Int`
 * Since the body of this function just returns the result of an expression, we
-just write that expression after the `=`, similar to the way a function might
+simply write that expression after the `=`, similar to the way a function might
 be defined mathematically: $f(x) = e$.
 
 Beyond those minor differences, however, there will be much that is familiar about Scala.
@@ -191,7 +191,11 @@ block (such as a function body) containing it is finished:
 {
   val x = 42
   println(x)
-} /* x no longer exists here */
+}
+```
+```scala mdoc:fail
+/* x no longer exists here */
+println(x)
 ```
 
 A variable may be temporarily **shadowed** by another variable with the same name.
@@ -202,6 +206,7 @@ visible again with its correct value:
 ```scala mdoc
 val x = 42
 println(x) /* prints 42 */
+
 {
   val x = 17 /* shadows earlier definition of x */
   println(x) /* prints 17 */
@@ -214,6 +219,7 @@ The above code is equivalent to
 ```scala mdoc:reset
 val x = 42
 println(x)
+
 {
   val y = 17
   println(y)
@@ -285,9 +291,9 @@ For example,
 
 ```scala mdoc
 val result = {
-  val local1 = "Hello"
-  val local2 = "World"
-  local1 ++ " " ++ local2
+  val greeting = "Hello"
+  val target = "World"
+  greeting + " " + target
 }
 println(result)
 ```
@@ -295,11 +301,11 @@ println(result)
 The nested lines are called a **block**, which may be used anywhere an expression is expected.
 Within a block, we may have a series of **local value definitions**.
 The value of the block expression (which is then bound as the value of `result`) is the
-value of the last expression in the block, `local1 ++ " " ++ local2` (note that `++`
-is the string concatenation operator in Scala).
+value of the last expression in the block, `greeting + " " + target` (note that `+`
+concatenates strings in Scala, just as in Java).
 Before it evaluates that expression, however, it first evaluates each of the `val`
 statements (in order), temporarily binding those values to the given local variables.
-In the example, `local1` and `local2` are each bound to their corresponding string
+In the example, `greeting` and `target` are each bound to their corresponding string
 values, and then the final expression is evaluated relative to those variable
 bindings.
 
@@ -309,7 +315,7 @@ This allows us to use local reasoning about the value of an expression, without
 having to know what might have happened in other blocks (which might have
 coincidentally used the same variable names).
 ```scala mdoc:fail
-println(local1)
+println(greeting)
 ```
 
 Predict the result bound to the outer `x` in this code (this is actually a case where we need the braces to embed the blocks within a larger expression):
@@ -357,13 +363,16 @@ When Scala reports the bindings that result from this code, it says that `area` 
 this reflects the fact that a function value in Scala is actually an object of a class implementing a particular **trait** (which is analogous to a Java interface).
 This function type may also be written `(Int, Int) => Int`, which you can think of as giving a picture of a typical use of the function:
 when applied to two `Int` arguments, it returns an `Int` result.
+More generally, the trait `Function2[A, B, C]` corresponds to the function type `(A, B) => C`.[^2]
+
+[^2]: There are similar traits named `Function0` through `Function22` for function objects with zero to twenty-two arguments. For historical reasons, it was assumed that you would never need more than 22 parameters. Currently, if you want a function with more parameters, the trait is named `FunctionXXL` :smile:.
 
 Because functions are just another kind of value, they may themselves be passed as arguments to functions, or returned as results; we will explore these **higher-order** functions later.
 
 Since expressions are evaluated according to the substitution model, where we do not have to worry about a variable changing its value between the time is was declared
 (**bound**) and used, we know several very useful facts about functions:
 * Functions in Scala are **pure**: the output only depends on the inputs, so calling a function twice with the same arguments will always produce the same result.
-Furthermore, we know that calling a function will not have any **side-effects**&mdash;that is, it will not cause the bindings of any other variables to change.[^2]
+Furthermore, we know that calling a function will not have any **side-effects**&mdash;that is, it will not cause the bindings of any other variables to change.[^3]
 If a program uses only pure functions, then the compiler is free to optimize code in various ways: it may rearrange when functions are called; it may combine multiple calls with the same arguments into one, or split a single call into several; and if it detects that the result of a function call is not needed, it may omit the call entirely.
 None of these optimizations are guaranteed to preserve program behavior if a function is not known to be pure, which is the case in most non-functional languages.
 * When an argument is passed to a function, the value (such as `6`) is bound to the parameter name (such as `width`) using the same mechanism as binding local variables in a block.
@@ -376,7 +385,7 @@ println({
 })
 ```
 
-[^2]: Technically, some Scala functions _may_ have a side-effect, if they call output functions such as `println`.
+[^3]: Technically, some Scala functions _may_ have a side-effect, if they call output functions such as `println`.
 That is, you can tell the difference between calling such a function once, twice, or not at all, by looking at the output that is printed to the console.
 We will consider this sort of side-effect to be benign, however, and we will generally use such functions only in very controlled places in a program, or only when tracing or debugging code.
 Other possible side-effects include calling impure functions such as `io.StdIn.readLine` or `math.random`,
@@ -400,12 +409,12 @@ The parameter is specified by the
 type "`Function<Integer, Integer>`".
 If _S_ and _T_ are types, then
 the type `Function<S, T>` represents functions from _S_ to _T_.
-Therefore, the parameter of _sumten_ is essentially a function from _int_ to _int_.[^3]
+Therefore, the parameter of _sumten_ is essentially a function from _int_ to _int_.[^4]
 The parameter name, _f_, stands for an arbitrary such function.
 Mathematically, $f\in \textit{int}^{\textit{int}}$, and so
 $\textit{sumten}\colon \textit{int}^{\textit{int}}\to\textit{int}$.
 
-[^3]: For our purposes we may ignore the distinction between _int_ and _Integer_ in Java.
+[^4]: For our purposes we may ignore the distinction between _int_ and _Integer_ in Java.
 
 The idea here might be that $\textit{sumten}(f)$ will compute
 $f(1)+f(2)+\cdots+f(10)$.
@@ -440,7 +449,7 @@ However, a more general technique is to use an **anonymous function**.
 ## Anonymous functions
 
 The anonymous function values in Java and Scala are sometimes called
-**lambda**[^4] expressions.
+**lambda**[^5] expressions.
 In Java, a lambda expression such as `i -> { return i * i * i; }`
 creates a function object that takes an _int_ (this will be
 determined from the context) and returns another _int_.
@@ -452,7 +461,7 @@ sum(i -> { return i * i * i; }, 3, 5)
 the result will be $3^3 + 4^3 + 5^3$,
 which is 216.
 
-[^4]: In the 1930's, the mathematician Alonzo Church introduced
+[^5]: In the 1930's, the mathematician Alonzo Church introduced
 the use of the Greek letter lambda ($\lambda$) to indicate an
 otherwise unnamed function defined by a formula. That is, instead
 of writing "the function $f$ where $f(x) = \textit{some formula}$",
@@ -490,12 +499,12 @@ Note that we are defining a **named function** (_sum_) here, along
 with the anonymous function value being passed as the first argument
 to _sum_.
 This allows us to use the _sum_ function on the right-hand side, within
-the definition of _sum_ itself; since an anonymous function does not have
-a name (until it gets bound to a variable), this sort of **recursive** call
-is not possible.
+the definition of _sum_ itself; this sort of **recursive** call
+is not possible in an anonymous function since it does not have
+a name (until it gets bound to a variable).
 If we just said `val sum = (...) => ... sum(f, a+1, b) ...`
 then the use of _sum_ on the right-hand side would be referring to some older
-(shadowed) binding to that name.
+(about to be shadowed) binding to that name.
 Scala also requires that function signatures in a `def` statement declare
 the types of their parameters as well as the return type, just as in Java.
 We will talk more about recursive functions later.

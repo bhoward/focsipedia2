@@ -90,35 +90,35 @@ The number $2^{2n}-1$ is divisible by 3 for all natural numbers $n$.
 > **Proof:**
 Here, $P(n)$ is the statement that $2^{2n}-1$ is divisible by 3.
 >
-**Base case:** When $n=0$, $2^{2n}-1 = 2^0-1=1-1=0$ and $0$ is divisible by 3 
+> **Base case:** When $n=0$, $2^{2n}-1 = 2^0-1=1-1=0$ and $0$ is divisible by 3 
 (since $0=3\cdot 0$.) Therefore the statement holds when $n=0$.
 >
-**Inductive case:** We want to show that if the statement is true for $n=k$ 
+> **Inductive case:** We want to show that if the statement is true for $n=k$ 
 (where $k$ is an arbitrary natural number),
 then it is true for $n=k+1$ also. That is, we must prove the implication
 $P(k) \rightarrow P(k+1)$. So we assume $P(k)$, that is, we assume that $2^{2k}-1$ is
 divisible by 3. This means that $2^{2k} -1 = 3m$ for some integer $m$.
 We want to prove $P(k+1)$, that is, that $2^{2(k+1)}-1$ is also divisible by 3:
 >
-$$
-\begin{array}{rll}
-   2^{2(k+1)}-1 &= 2^{2k+2}-1 &\\
-                       &= 2^{2k}\cdot2^2 - 1 &\text{properties of exponents}\\
-                       &= 4\cdot 2^{2k} -1 \\
-                       &= 4\cdot 2^{2k} -4 + 4 -1 \\
-                       &= 4(2^{2k} -1) + 3 &\text{algebra} \\
-                       &= 4(3m) + 3 & \text{the inductive hypothesis}\\
-                       &= 3(4m+1) & \text{algebra}
-\end{array}
-$$
+> $$
+> \begin{array}{rll}
+>    2^{2(k+1)}-1 &= 2^{2k+2}-1 &\\
+>                        &= 2^{2k}\cdot2^2 - 1 &\text{properties of exponents}\\
+>                        &= 4\cdot 2^{2k} -1 \\
+>                        &= 4\cdot 2^{2k} -4 + 4 -1 \\
+>                        &= 4(2^{2k} -1) + 3 &\text{algebra} \\
+>                        &= 4(3m) + 3 & \text{the inductive hypothesis}\\
+>                        &= 3(4m+1) & \text{algebra}
+> \end{array}
+> $$
 >
-and from the last line we see that $2^{2k+1}$ is in fact divisible by 3. (The
-third step&mdash;subtracting and adding 4&mdash;was done to enable us to use our inductive
-hypothesis.)
+> and from the last line we see that $2^{2k+1}$ is in fact divisible by 3.
+> (The third step&mdash;subtracting and adding 4&mdash;was done to enable us to use our inductive hypothesis.)
 >
-Altogether, we have proved that $P(0)$ holds and that, for all $k$, $P(k) \rightarrow
-P(k+1)$ is true. Therefore, by the principle of induction, $P(n)$ is true for
-all $n$ in $\N$, i.e. $2^{2n}-1$ is divisible by 3 for all $n$ in $\N$.
+> Altogether, we have proved that $P(0)$ holds and that, for all $k$, $P(k) \rightarrow P(k+1)$ is true.
+> Therefore, by the principle of induction, $P(n)$ is true for all $n$ in $\N$, i.e. $2^{2n}-1$ is divisible by 3 for all $n$ in $\N$.
+
+---
 
 The principal of mathematical induction gives a method for proving $P(n)$ for
 all $n$ in the set $\N$. It should be clear that if $M$ is any natural number, a similar method can
@@ -135,27 +135,25 @@ variables, where $n\ge 1$. Then there are exactly $2^n$ different ways
 of assigning truth values to the $n$ variables.
 
 > **Proof:**
-Let $P(n)$ be the statement "There are exactly $2^n$ different ways
+> Let $P(n)$ be the statement "There are exactly $2^n$ different ways
 of assigning truth values to $n$ propositional variables." We will
 use induction to prove the $P(n)$ is true for all $n\ge1$.
 >
-**Base case:** First, we prove the statement $P(1)$. If there is exactly
+> **Base case:** First, we prove the statement $P(1)$. If there is exactly
 one variable, then there are exactly two ways of assigning a truth
 value to that variable. Namely, the variable can be either _true
 or _false_. Since $2=2^1$, $P(1)$ is true.
 >
-**Inductive case:** Suppose that $P(k)$ is already known to be true.
-We want to prove that, under this assumption, $P(k+1)$ is also true.
-Suppose that $p_1$, $p_2$, &hellip;, $p_{k+1}$ are $k+1$ propositional
-variables. Since we are assuming that $P(k)$ is true, we know
-that there are $2^k$ ways of assigning truth values to
-$p_1$, $p_2$, &hellip;, $p_k$. But each assignment of truth values
-to $p_1$, $p_2$, &hellip;, $p_k$ can be extended to the complete
-list $p_1$, $p_2$, &hellip;, $p_k$, $p_{k+1}$ in two ways. Namely,
-$p_{k+1}$ can be assigned the value _true_ or the value
-_false_. It follows that there are $2\cdot 2^k$ ways of
-assigning truth values to $p_1$, $p_2$, &hellip;, $p_{k+1}$.
-Since $2\cdot2^k=2^{k+1}$, this finishes the proof.
+> **Inductive case:** Suppose that $P(k)$ is already known to be true.
+> We want to prove that, under this assumption, $P(k+1)$ is also true.
+> Suppose that $p_1$, $p_2$, &hellip;, $p_{k+1}$ are $k+1$ propositional variables.
+> Since we are assuming that $P(k)$ is true, we know that there are $2^k$ ways of assigning truth values to $p_1$, $p_2$, &hellip;, $p_k$.
+> But each assignment of truth values to $p_1$, $p_2$, &hellip;, $p_k$ can be extended to the complete list $p_1$, $p_2$, &hellip;, $p_k$, $p_{k+1}$ in two ways.
+> Namely, $p_{k+1}$ can be assigned the value _true_ or the value _false_.
+> It follows that there are $2\cdot 2^k$ ways of assigning truth values to $p_1$, $p_2$, &hellip;, $p_{k+1}$.
+> Since $2\cdot2^k=2^{k+1}$, this finishes the proof.
+
+---
 
 The sum of an arbitrary number of terms is written using the
 symbol $\sum$. (This symbol is the Greek letter sigma, which is 
@@ -188,58 +186,60 @@ Here are two examples:
 $\displaystyle \sum_{i=1}^n\, i=\frac{n(n+1)}{2}$ for any integer $n$ greater than zero.
 
 > **Proof:**
-Let $P(n)$ be the statement $\displaystyle \sum_{i=1}^n\,i=\frac{n(n+1)}{2}$.
+> Let $P(n)$ be the statement $\displaystyle \sum_{i=1}^n\,i=\frac{n(n+1)}{2}$.
 We use induction to show that $P(n)$ is true for all $n\geq 1$.
 >
-**Base case:** Consider the case $n=1$. $P(1)$ is the statement
-that $\displaystyle \sum_{i=1}^1\,i=\frac{1(1+1)}{2}$.
-Since $\displaystyle \sum_{i=1}^1\,i=1$ and $\displaystyle\frac{1(1+1)}{2}=1$,
-$P(1)$ is true.
+> **Base case:** Consider the case $n=1$. $P(1)$ is the statement
+> that $\displaystyle \sum_{i=1}^1\,i=\frac{1(1+1)}{2}$.
+> Since $\displaystyle \sum_{i=1}^1\,i=1$ and $\displaystyle\frac{1(1+1)}{2}=1$,
+> $P(1)$ is true.
 >
-**Inductive case:** Let $k>1$ be arbitrary, and assume that $P(k)$ is true.
-We want to show that $P(k+1)$ is true. $P(k+1)$ is the statement
-$\displaystyle \sum_{i=1}^{k+1}\,i=\frac{(k+1)(k+2)}{2}$. But
+> **Inductive case:** Let $k>1$ be arbitrary, and assume that $P(k)$ is true.
+> We want to show that $P(k+1)$ is true. $P(k+1)$ is the statement
+> $\displaystyle \sum_{i=1}^{k+1}\,i=\frac{(k+1)(k+2)}{2}$. But
 >
-$$
-\begin{array}{rll}
-   \sum_{i=1}^{k+1}\,i &= \left(\sum_{i=1}^k\,i\right)+(k+1) &\\
-                       &= \frac{k(k+1)}{2}+(k+1) &\text{(inductive hypothesis)}\\
-                       &= \frac{k(k+1)}{2}+\frac{2(k+1)}{2}\\
-                       &= \frac{k(k+1)+2(k+1)}{2}\\
-                       &= \frac{(k+2)(k+1)}{2}\\
-                       &= \frac{(k+1)(k+2)}{2}
-\end{array}
-$$
+> $$
+> \begin{array}{rll}
+>    \sum_{i=1}^{k+1}\,i &= \left(\sum_{i=1}^k\,i\right)+(k+1) &\\
+>                        &= \frac{k(k+1)}{2}+(k+1) &\text{(inductive hypothesis)}\\
+>                        &= \frac{k(k+1)}{2}+\frac{2(k+1)}{2}\\
+>                        &= \frac{k(k+1)+2(k+1)}{2}\\
+>                        &= \frac{(k+2)(k+1)}{2}\\
+>                        &= \frac{(k+1)(k+2)}{2}
+> \end{array}
+> $$
 >
-which is what we wanted to show. This computation completes the induction.
+> which is what we wanted to show. This computation completes the induction.
+
+---
 
 > **Theorem:**
 $\displaystyle \sum_{i=1}^n\,i2^{i-1}=(n-1)\cdot2^n+1$ for any natural number $n>0$.
 
 > **Proof:**
-Let $P(n)$ be the statement $\displaystyle \sum_{i=1}^n\,i2^{i-1}=(n-1)\cdot2^n+1$.
-We use induction to show that $P(n)$ is true for all $n>0$
+> Let $P(n)$ be the statement $\displaystyle \sum_{i=1}^n\,i2^{i-1}=(n-1)\cdot2^n+1$.
+> We use induction to show that $P(n)$ is true for all $n>0$
 >
-**Base case:** Consider the case $n=1$. $P(1)$ is the statement
-that $\displaystyle \sum_{i=1}^1\,i2^{i-1}=(1-1)\cdot2^1+1$.
-Since each side of this equation is equal to one, this is true.
+> **Base case:** Consider the case $n=1$. $P(1)$ is the statement
+> that $\displaystyle \sum_{i=1}^1\,i2^{i-1}=(1-1)\cdot2^1+1$.
+> Since each side of this equation is equal to one, this is true.
 >
-**Inductive case:** Let $k>1$ be arbitrary, and assume that $P(k)$ is
-true. We want to show that $P(k+1)$ is true. $P(k+1)$ is the
-statement $\displaystyle \sum_{i=1}^{k+1}\,i2^{i-1}=((k+1)-1)\cdot2^{k+1}+1$.
-But, we can compute that
+> **Inductive case:** Let $k>1$ be arbitrary, and assume that $P(k)$ is
+> true. We want to show that $P(k+1)$ is true. $P(k+1)$ is the
+> statement $\displaystyle \sum_{i=1}^{k+1}\,i2^{i-1}=((k+1)-1)\cdot2^{k+1}+1$.
+> But, we can compute that
 >
-$$
-\begin{array}{rll}
-   \sum_{i=1}^{k+1}\,i2^{i-1} &= \left(\sum_{i=1}^k\,i2^{i-1}\right)+(k+1)2^{(k+1)-1}\\
-                              &= \left((k-1)\cdot2^k+1\right)+(k+1)2^k &\text{(inductive hypothesis)}\\
-                              &= \big((k-1)+(k+1)\big)2^k+1\\
-                              &= (k\cdot2)\cdot2^k+1\\
-                              &= k2^{k+1}+1
-\end{array}
-$$
+> $$
+> \begin{array}{rll}
+>    \sum_{i=1}^{k+1}\,i2^{i-1} &= \left(\sum_{i=1}^k\,i2^{i-1}\right)+(k+1)2^{(k+1)-1}\\
+>                               &= \left((k-1)\cdot2^k+1\right)+(k+1)2^k &\text{(inductive hypothesis)}\\
+>                               &= \big((k-1)+(k+1)\big)2^k+1\\
+>                               &= (k\cdot2)\cdot2^k+1\\
+>                               &= k2^{k+1}+1
+> \end{array}
+> $$
 >
-which is what we wanted to show. This completes the induction.
+> which is what we wanted to show. This completes the induction.
 
 For example, these theorems show that $\displaystyle\sum_{i=1}^{100}i=1+2+3+4+\cdots+100=\frac{100(100+1)}{2}= 5050$
 and that $1\cdot2^0+2\cdot2^1+3\cdot2^2+4\cdot2^3+5\cdot2^4=(5-1)2^5+1=129$,
@@ -257,15 +257,15 @@ us a lot more to work with when deducing $P(k+1)$. We will need this
 second form of induction in the next two sections.
 
 > **Theorem: Strong Mathematical Induction**  
-Let $P$ be a one-place predicate whose domain of discourse includes
+> Let $P$ be a one-place predicate whose domain of discourse includes
 the natural numbers. Suppose that $P(0)$ is true and that
 >
-$$
-(P(0)\land P(1)\land\cdots\land P(k))\rightarrow P(k+1)
-$$
+> $$
+> (P(0)\land P(1)\land\cdots\land P(k))\rightarrow P(k+1)
+> $$
 >
-is true for each natural number $k\geq 0$. 
-Then $P(n)$ is true for every natural number $n$.
+> is true for each natural number $k\geq 0$. 
+> Then $P(n)$ is true for every natural number $n$.
 
 For example, we can use this theorem to prove that every integer greater
 than one can be written as a product of prime numbers (where a
@@ -282,30 +282,30 @@ $P(x)$. In this sense, 0, 1, and every prime number are base cases
 in the following theorem.
 
 > **Theorem:**
-Every natural number greater than one can be written as a product of
-prime numbers.
+> Every natural number greater than one can be written as a product of
+> prime numbers.
 
 > **Proof:**
-Let $P(n)$ be the statement "if $n>1$, then $n$ can be written as a 
-product of prime numbers." We will prove that $P(n)$ is true for all
-$n$ by applying the strong principle of induction.
+> Let $P(n)$ be the statement "if $n>1$, then $n$ can be written as a 
+> product of prime numbers." We will prove that $P(n)$ is true for all
+> $n$ by applying the strong principle of induction.
 >
-Note that $P(0)$ and $P(1)$ are both automatically true, since $n=0$ and $n=1$
-do not satisfy the condition that $n>1$, and $P(2)$ is true
-since 2 is the product of the single prime number 2. Suppose that $k$ is an arbitrary
-natural number with $k>1$, and suppose that $P(0)$, $P(1)$, &hellip;, $P(k)$
-are already known to be true; we want to show that $P(k+1)$ is true. 
-In the case where $k+1$ is a prime number,
-then $k+1$ is a product of one prime number, so $P(k+1)$ is true.
+> Note that $P(0)$ and $P(1)$ are both automatically true, since $n=0$ and $n=1$
+> do not satisfy the condition that $n>1$, and $P(2)$ is true
+> since 2 is the product of the single prime number 2. Suppose that $k$ is an arbitrary
+> natural number with $k>1$, and suppose that $P(0)$, $P(1)$, &hellip;, $P(k)$
+> are already known to be true; we want to show that $P(k+1)$ is true. 
+> In the case where $k+1$ is a prime number,
+> then $k+1$ is a product of one prime number, so $P(k+1)$ is true.
 >
-Consider the case where $k+1$ is not prime. Then, according to the
-definition of prime number, it is possible to write $k+1=ab$ where
-$a$ and $b$ are numbers in the range from 2 to $k$ inclusive. Since
-$P(0)$ through $P(k)$ are known to be true, $a$ and $b$ can
-each be written as a product of prime numbers. Since $k+1=ab$,
-$k+1$ can also be written as a product of prime numbers. We have
-shown that $P(k+1)$ follows from $P(0)\land P(1)\land\cdots\land P(k)$,
-and this completes the induction.
+> Consider the case where $k+1$ is not prime. Then, according to the
+> definition of prime number, it is possible to write $k+1=ab$ where
+> $a$ and $b$ are numbers in the range from 2 to $k$ inclusive. Since
+> $P(0)$ through $P(k)$ are known to be true, $a$ and $b$ can
+> each be written as a product of prime numbers. Since $k+1=ab$,
+> $k+1$ can also be written as a product of prime numbers. We have
+> shown that $P(k+1)$ follows from $P(0)\land P(1)\land\cdots\land P(k)$,
+> and this completes the induction.
 
 ## Exercises
 
@@ -336,7 +336,7 @@ $$
 $$
 for any natural number $n$ and for any real number $r$ such that $r\not=1$.
 
-1. Use induction to prove that for any natural number $n$,
+3. Use induction to prove that for any natural number $n$,
 $$
   \sum_{i=0}^{n}\frac{1}{2^i}=2-\frac{1}{2^{n}}
 $$
