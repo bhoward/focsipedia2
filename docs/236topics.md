@@ -11,7 +11,7 @@ Note that it does not precisely follow the order in the book's table of contents
 
 ### [Introduction to Functional Programming](fp/intro.md)
 
-### [Induction](logic/induction.md) and [Recursion](logic/recursion.md)
+### [Recursion and Induction](logic/recind.md)
 
 ### [Algebraic Data Types and Pattern Matching](fp/types.md)
 

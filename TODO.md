@@ -1,5 +1,3 @@
-* Revise Induction and Recursion sections (combine?) for 236
-
 * Write these sections:
    + Topological Sort and Connected Components
    + Shortest Paths; Minimum Spanning Trees
