@@ -30,6 +30,9 @@ If the nodes are numbered 1 through $N$, then the adjacency matrix is the two-di
 This representation is often extended to labeled graphs where the labels are **weights**: the entry for $(i,j)$ gives the weight (or distance, or cost, &hellip;) of the edge between $i$ and $j$.
 Depending on the application, it may be preferable to use an infinite weight to represent absent edges, rather than 0 (since a weight of 0 might be interpreted as saying there is no cost to go from $i$ to $j$).
 
+<details>
+<summary>Scala Code for Graph Representations</summary>
+
 Here is some Scala code defining types for these representations, plus some conversion functions.
 In each case, the type is parameterized by a node type `T`, and the representation type is a case class where the first component is the list of nodes (because there is no generic way to get this list for an arbitrary type `T`, and if `T` is `Int` or `String` we will only want to use a subset of the possible values anyway).
 ```scala mdoc
@@ -283,6 +286,7 @@ RenderFile(image1, "GraphDemo1.png")
 RenderFile(image2, "GraphDemo2.png")
 RenderFile(image3, "GraphDemo3.png")
 ```
+</details>
 
 ## Graph Traversals
 
@@ -615,12 +619,6 @@ enum DFSResult[T]:
   case TopoOrder(nodes: List[T])
 
 def depthFirst[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
-  def chooseUnvisited(visited: List[T]): Option[T] = {
-    g.nodes.filter(node => !visited.contains(node)) match
-      case Nil => None
-      case head :: tail => Some(head)
-  }
-
   def dfs(node: T, state: State[T]): State[T] = {
     val visitState = state.copy(visited = node :: state.visited)
     val finishState = g.neighbors(node).foldLeft(visitState) { case (s, n) =>
@@ -635,19 +633,22 @@ def depthFirst[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
     finishState.copy(finished = node :: finishState.finished)
   }
 
-  def run(state: State[T]): (DFSResult[T], Graph[T]) = {
-    chooseUnvisited(state.visited) match
-      case None =>
+  def run(nodes: List[T], state: State[T]): (DFSResult[T], Graph[T]) = {
+    nodes match
+      case node :: rest =>
+        if !state.visited.contains(node)
+        then run(rest, dfs(node, state))
+        else run(rest, state)
+      case Nil =>
         val t = Graph.Pairs(g.nodes, state.tree)
         state.back match
           case Nil => (DFSResult.TopoOrder(state.finished), t)
           case e :: _ => (DFSResult.Cycle(e), t)
-      case Some(node) => run(dfs(node, state))
   }
 
   val initialState = State[T](Nil, Nil, Nil, Nil, Nil)
 
-  run(initialState)
+  run(g.nodes, initialState)
 }
 
 println(depthFirst(demo))
@@ -739,37 +740,32 @@ def depthFirst3[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
   var forward: List[(T, T)] = Nil
   var back: List[(T, T)] = Nil
 
-  def getUnvisited: List[T] = {
-    g.nodes.filter(node => !visited.contains(node))
-  }
+  for start <- g.nodes do
+    if !visited.contains(start)
+    then
+      stack.push(Visit(start))
 
-  var unvisited = getUnvisited
-  while unvisited.nonEmpty do
-    stack.push(Visit(unvisited.head))
+      while stack.nonEmpty do
+        stack.pop() match
+          case Visit(node) =>
+            stack.push(Finish(node))
+            for node2 <- g.neighbors(node) do
+              stack.push(Edge(node, node2))
+            visited = node :: visited
 
-    while stack.nonEmpty do
-      stack.pop() match
-        case Visit(node) =>
-          stack.push(Finish(node))
-          for node2 <- g.neighbors(node) do
-            stack.push(Edge(node, node2))
-          visited = node :: visited
-
-        case Finish(node) =>
-          finished = node :: finished
-          
-        case Edge(node1, node2) =>
-          if finished.contains(node2) then
-            forward = (node1, node2) :: forward
-          else if visited.contains(node2) then
-            back = (node1, node2) :: back
-          else
-            tree = (node1, node2) :: tree
-            stack.push(Visit(node2))
-    end while
-
-    unvisited = getUnvisited
-  end while
+          case Finish(node) =>
+            finished = node :: finished
+            
+          case Edge(node1, node2) =>
+            if finished.contains(node2) then
+              forward = (node1, node2) :: forward
+            else if visited.contains(node2) then
+              back = (node1, node2) :: back
+            else
+              tree = (node1, node2) :: tree
+              stack.push(Visit(node2))
+      end while
+  end for
   
   val t = Graph.Pairs(g.nodes, tree)
   if back.isEmpty then
