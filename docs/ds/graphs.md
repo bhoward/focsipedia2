@@ -342,7 +342,7 @@ That path plus the back edge will form a cycle.
 Conversely, if a graph has a cycle, then we will find at least one back edge, because there will be some point in the traversal where we close the loop back to a node on the current path (which will necessarily be visited but not yet finished).
 
 On the other hand, if we find no back edges, then the graph is **acyclic**.
-Directed acyclic graphs (often called **dags**) share many of the advantages of trees; indeed, we have already encountered them as combinational circuits, which we viewed as a generalization of boolean expression trees (with shared subterms).
+Directed acyclic graphs (often called **DAG**) share many of the advantages of trees; indeed, we have already encountered them as combinational circuits, which we viewed as a generalization of boolean expression trees (with shared subterms).
 They are also useful to model dependencies, for example showing which tasks must be completed before others (such as prerequisite courses in a college catalog).
 
 Given an acyclic graph, we may "linearize" the nodes by choosing an order in which to list them that respects the dependencies among them (for example, an order in which to take a sequence of classes where all the prerequisites are taken before the courses that depend on them).

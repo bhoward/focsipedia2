@@ -35,7 +35,7 @@ Note that it does not precisely follow the order in the book's table of contents
 ### [Graphs, Representations, Traversals](ds/graphs.md)
 
 ## Week 4: Graph Algorithms.
-### Topological Sort and Connected Components
+### [Topological Sort and Connected Components](ds/components.md)
 
 ### Shortest Paths; Minimum Spanning Trees
 

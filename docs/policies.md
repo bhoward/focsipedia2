@@ -21,7 +21,7 @@ This information is from the Fall 2020 offering of CSC 233! Information for the 
 </ul>
 
 <dt>Professor</dt>
-<dd>Brian Howard (<a href="mailto:bhoward@depauw.edu">bhoward@depauw.edu</a>)</dd>
+<dd>Brian Howard ([bhoward@depauw.edu](mailto:bhoward@depauw.edu))</dd>
 
 <dt>Office</dt>
 <dd>Julian 266 (+1-765-658-4120)</dd>
