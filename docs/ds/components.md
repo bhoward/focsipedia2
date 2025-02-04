@@ -95,4 +95,33 @@ The supervertices in its meta-graph will form a **strict partial order**&mdash;a
 We may find the strongly connected components of a graph in linear time using two passes of depth-first search.
 This is known as **Kosaraju's Algorithm**, or sometimes the **Kosaraju-Sharir Algorithm** (Kosaraju discovered it in 1978, but didn't publish it before Sharir independently discovered it in 1981).
 
-**IN PROGRESS**
+Considering the meta-graph of a graph, there must be at least one strongly connected component that is a **sink**&mdash;that is, with no edges leaving it.
+To see this, simply take the last component in any topological ordering of the meta-graph; it cannot have any edges leading to another component, because that would contradict the definition of a topological order.
+If we were to start a DFS traversal in such a sink component, then it would visit exactly the set of nodes within that component (because those are exactly the nodes reachable from anywhere in the component).
+After processing a sink, if there are any unvisited components then the meta-graph of all of the remaining components must again have at least one sink (in terms of the full graph, the new sink might have outgoing edges, but they will only go to already visited nodes).
+Restarting the DFS traversal at an arbitrary node in this new sink component will then visit exactly the nodes in that component, because we do not follow edges that lead to already visited nodes.
+This process of restarting DFS in successive remaining sink components will eventually visit all of the components, in a reverse topological order.
+
+The issue then is to identify a node in a sink component.
+However, this is not as simple as choosing the first node to be finished in a depth-first search!
+For example, in the graph above, if we were to start at node $C$ and then visit $A$ and $B$ in turn, then we would finish $B$ right away, even though it is not in a sink component (which in the example would be only node $G$).
+
+On the other hand, it is easy to use DFS to identify a node in a **source** component&mdash;that is, in a component with _only_ outgoing edges.
+After completing a DFS traversal of the entire graph (including any necessary restarts), the very last node to be finished is guaranteed to be in a source component, because none of the nodes in a source can be marked finished before any of the rest of the graph.
+Although we cannot say that the DFS traversal has found a topological ordering of the entire graph, because such an ordering will not exist if there are cycles, we can say that the last-finished node may only have incoming edges from other nodes in the same (source) component.
+
+Now, we have seen that it is easy to identify a node in a _source_ component, but we know how to pick off the components if we can start in a _sink_.
+The remaining key observation is that the **reverse** of a directed graph, which has the same set of nodes but all of the edges are reversed, must have the same set of strongly connected components; furthermore, a source component in the original graph will be a sink component in the reverse graph!
+
+Finally, we can combine the above observations to obtain Kosaraju's algorithm:
+
+* First perform a DFS traversal of the entire graph to yield a list of the nodes in reverse-finishing order (that is, the first node on the list will be the last one marked finished);
+
+* Then step through that list of nodes in order, using each unvisited node to start a DFS traversal on the _reverse_ graph. This will visit exactly the nodes in the next (in topological order) strongly connected component, because in terms of the reverse graph we are repeatedly restarting in the next remaining sink.
+
+Since this requires a total of two DFS passes over all of the nodes in the graph, the running time will be linear in the size of the graph (number of nodes plus edges).
+
+## Exercises
+
+1. Trace through Kosaraju's algorithm on the sample graph above and verify that it visits $A$, $B$, $C$, and $D$ before needing to be restarted, then it visits $E$ and $F$, and finally visits $G$ on the last restart.
+(Within each component, it will not necessarily go in alphabetical order.)
