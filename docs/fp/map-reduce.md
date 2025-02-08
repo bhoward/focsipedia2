@@ -52,7 +52,11 @@ Sometimes a direct recursive solution to a problem doesn't quite work.
 For example, suppose we want to convert a list of words into a single string with commas between each word.
 If we try to do this as a reduce operation, the result is close but not correct:
 ```scala mdoc
-reduce((s: String, w: String) => s + ", " + w, "", List("hello", "world"))
+reduce(
+  (s: String, w: String) => s + ", " + w,
+  "",
+  List("hello", "world")
+)
 ```
 The problem is that the initial task is not quite the same as the smaller subtask that is left after we handle one element of the list.
 Every word _except_ the first needs to be preceded by a comma.[^3]

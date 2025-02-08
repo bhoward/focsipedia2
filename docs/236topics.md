@@ -15,29 +15,28 @@ Note that it does not precisely follow the order in the book's table of contents
 
 ### [Algebraic Data Types and Pattern Matching](fp/types.md)
 
+## Week 2: Elementary Functional Algorithms.
 ### [Functional Graphics](fp/doodle.md) and [Drawing Project](fp/doodle-project.md)
 
-## Week 2: Elementary Functional Algorithms.
 ### [MapReduce](fp/map-reduce.md)
 
 ### [Functional Sorting](ds/lists.md)
 
 ### [Program Verification](ds/verification.md)
 
-### [Tree Traversals](ds/trees.md)
-
 ## Week 3: Functional Trees. Introduction to Graphs.
+### [Tree Traversals](ds/trees.md)
 
 ### [Binary Search Trees and Heaps](ds/bst.md)
 
 ### [Balanced Binary Search Trees](ds/balance.md)
 
+## Week 4: Graph Algorithms.
 ### [Graphs, Representations, Traversals](ds/graphs.md)
 
-## Week 4: Graph Algorithms.
 ### [Topological Sort and Connected Components](ds/components.md)
 
-### Shortest Paths; Minimum Spanning Trees
+### [Shortest Paths; Minimum Spanning Trees](ds/paths.md)
 
 ### Transitive Closure
 
