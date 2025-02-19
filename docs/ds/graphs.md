@@ -601,54 +601,44 @@ Note that other markings are possible, depending on the choices made (which node
 
 ### Scala Implementation of Depth-First Traversal
 
-To write the depth-first traversal as a pure functional program, we do not want to store the extra information (visited and finished lists, and the categorization of the edges) in mutable data structures.
-Instead, we will pass around a **record** containing the state; in Scala, this will be implemented using a **case class**.
-The fields of a case class object are immutable, so if we want to change the field `x` of record `r` we need to make a copy of the object with that field modified: `r.copy(x = v)`.
+Here is the depth-first traversal algorithm implemented in Scala.
+For simplicity, we are using a mixed functional and imperative approach; from the outside, the `depthFirst` function is pure, with no side-effects, but inside its body we are using mutable variables to keep track of the visited and finished nodes, as well as the tree, forward, and back edges.
+We could avoid this by creating a record to hold the current state of these variables, making a modified copy of the state each time we want to change one, and passing the state around as an input and output to the `dfs` function, but the external effect would be the same.
 
 ```scala mdoc
-case class State[T](
-  visited: List[T],
-  finished: List[T],
-  tree: List[(T, T)],
-  forward: List[(T, T)],
-  back: List[(T, T)]
-)
-
 enum DFSResult[T]:
   case Cycle(backEdge: (T, T))
   case TopoOrder(nodes: List[T])
+import DFSResult.*
 
 def depthFirst[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
-  def dfs(node: T, state: State[T]): State[T] = {
-    val visitState = state.copy(visited = node :: state.visited)
-    val finishState = g.neighbors(node).foldLeft(visitState) { case (s, n) =>
-        if s.finished.contains(n) then
-          s.copy(forward = (node, n) :: s.forward)
-        else if s.visited.contains(n) then
-          s.copy(back = (node, n) :: s.back)
-        else
-          val s2 = dfs(n, s)
-          s2.copy(tree = (node, n) :: s2.tree)
-      }
-    finishState.copy(finished = node :: finishState.finished)
+  var visited: List[T] = Nil
+  var finished: List[T] = Nil
+  var tree: List[(T, T)] = Nil
+  var forward: List[(T, T)] = Nil
+  var back: List[(T, T)] = Nil
+
+  def dfs(start: T): Unit = {
+    visited = start :: visited
+    for node <- g.neighbors(start) do
+      val edge = (start, node)
+      if finished.contains(node) then
+        forward = edge :: forward
+      else if visited.contains(node) then
+        back = edge :: back
+      else
+        tree = edge :: tree
+        dfs(node)
+    finished = start :: finished
   }
 
-  def run(nodes: List[T], state: State[T]): (DFSResult[T], Graph[T]) = {
-    nodes match
-      case node :: rest =>
-        if !state.visited.contains(node)
-        then run(rest, dfs(node, state))
-        else run(rest, state)
-      case Nil =>
-        val t = Graph.Pairs(g.nodes, state.tree)
-        state.back match
-          case Nil => (DFSResult.TopoOrder(state.finished), t)
-          case e :: _ => (DFSResult.Cycle(e), t)
-  }
+  for start <- g.nodes do
+    if !visited.contains(start) then dfs(start)
 
-  val initialState = State[T](Nil, Nil, Nil, Nil, Nil)
-
-  run(g.nodes, initialState)
+  val forest = Graph.Pairs(g.nodes, tree)
+  back match
+    case Nil => (TopoOrder(finished), forest)
+    case e :: _ => (Cycle(e), forest)
 }
 
 println(depthFirst(demo))
@@ -659,13 +649,15 @@ The returned value from `depthFirst` is a pair of a `DFSResult` and a `Graph`.
 The `DFSResult` is either `Cycle(e)`, where `e` is a back edge (pair of nodes) causing a cycle, or `TopoOrder(nodes)`, where `nodes` is a list of the graph nodes in topological order.
 The `Graph` value is the subgraph consisting of just the tree nodes.
 
-Instead of using the recursive helper function `dfs`, which performs a single depth-first exploration starting from a given node, we may perform all of the exploration in the (tail-recursive) helper function `run` by using an explicit stack to keep track of the current path from the starting node.
+### Equivalent Imperative Code
+
+Instead of using the recursive helper function `dfs`, which performs a single depth-first exploration starting from a given node, we may perform all of the exploration by using an explicit stack to keep track of the current path from the starting node.
 Each entry in the stack can be one of three values:
 * `Visit(n)` says that the current task is to visit node `n`;
 * `Finish(n)` says that the current task is to finish node `n` (note that this is pushed on the stack underneath all of the edges out of `n`, so it will only be done after all of the neighbors are processed); and
 * `Edge(n1, n2)` says that the current task is to consider the edge from `n1` to `n2`.
 
-The `run` helper function can now be seen as a loop that continually removes a task from the stack and then updates the stack and the state to perform that task:
+The main function can now be written as a loop that continually removes a task from the stack and then updates the stack and the state to perform that task:
 
 ```scala mdoc
 enum DFSStackItem[T]:
@@ -674,63 +666,7 @@ enum DFSStackItem[T]:
   case Edge(node1: T, node2: T)
 import DFSStackItem.*
 
-type Stack[T] = List[DFSStackItem[T]]
-
 def depthFirst2[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
-  def chooseUnvisited(visited: List[T]): Option[T] = {
-    g.nodes.filter(node => !visited.contains(node)) match
-      case Nil => None
-      case head :: tail => Some(head)
-  }
-
-  def run(stack: Stack[T], state: State[T]): (DFSResult[T], Graph[T]) = {
-    stack match
-      case Nil =>
-        chooseUnvisited(state.visited) match
-          case None =>
-            val t = Graph.Pairs(g.nodes, state.tree)
-            state.back match
-              case Nil => (DFSResult.TopoOrder(state.finished), t)
-              case e :: _ => (DFSResult.Cycle(e), t)
-          case Some(node) =>
-            run(Visit(node) :: stack, state)
-      case top :: rest =>
-        top match
-          case Visit(node) =>
-            val edges = g.neighbors(node).map(node2 => Edge(node, node2))
-            val visitedState = state.copy(visited = node :: state.visited)
-            run(edges ::: Finish(node) :: rest, visitedState)
-          case Finish(node) =>
-            val finishedState = state.copy(finished = node :: state.finished)
-            run(rest, finishedState)
-          case Edge(node1, node2) =>
-            if state.finished.contains(node2) then
-              run(rest, state.copy(forward = (node1, node2) :: state.forward))
-            else if state.visited.contains(node2) then
-              run(rest, state.copy(back = (node1, node2) :: state.back))
-            else
-              run(Visit(node2) :: rest, state.copy(tree = (node1, node2) :: state.tree))
-  }
-
-  val initialState = State[T](Nil, Nil, Nil, Nil, Nil)
-
-  run(Nil, initialState)
-}
-
-println(depthFirst2(demo))
-println(depthFirst2(demoB))
-```
-
-### Equivalent Imperative Code
-
-Now that we have seen a pure functional approach to depth-first traversal, it is instructive to compare an imperative approach using mutable variables and data structures.
-Although we could have written this code to begin with, and it probably seems more familiar coming from a background of languages like Java, in general it is much harder to prove properties of imperative code.
-However, even if most of the code you write is in an imperative style, it pays to keep the functional style in mind as a guide to limiting the impact of mutability and preserving some ability to reason compositionally about program behavior.
-
-Here is the above code, still written in Scala but using variables, loops, and a mutable stack:
-
-```scala mdoc
-def depthFirst3[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
   import scala.collection.mutable.Stack as MutStack
   val stack: MutStack[DFSStackItem[T]] = MutStack.empty
 
@@ -748,34 +684,34 @@ def depthFirst3[T](g: Graph[T]): (DFSResult[T], Graph[T]) = {
       while stack.nonEmpty do
         stack.pop() match
           case Visit(node) =>
+            visited = node :: visited
             stack.push(Finish(node))
             for node2 <- g.neighbors(node) do
               stack.push(Edge(node, node2))
-            visited = node :: visited
 
           case Finish(node) =>
             finished = node :: finished
             
           case Edge(node1, node2) =>
+            val edge = (node1, node2)
             if finished.contains(node2) then
-              forward = (node1, node2) :: forward
+              forward = edge :: forward
             else if visited.contains(node2) then
-              back = (node1, node2) :: back
+              back = edge :: back
             else
-              tree = (node1, node2) :: tree
+              tree = edge :: tree
               stack.push(Visit(node2))
       end while
   end for
   
-  val t = Graph.Pairs(g.nodes, tree)
-  if back.isEmpty then
-    (DFSResult.TopoOrder(finished), t)
-  else
-    (DFSResult.Cycle(back.head), t)
+  val forest = Graph.Pairs(g.nodes, tree)
+  back match
+    case Nil => (TopoOrder(finished), forest)
+    case e :: _ => (DFSResult.Cycle(e), forest)
 }
 
-println(depthFirst3(demo))
-println(depthFirst3(demoB))
+println(depthFirst2(demo))
+println(depthFirst2(demoB))
 ```
 
 ### Breath-First Traversal
