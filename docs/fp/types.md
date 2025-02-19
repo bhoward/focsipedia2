@@ -380,6 +380,20 @@ to implement that method in all of the existing subclasses. This tradeoff
 is part of the reason for the existence of hybrid object-functional languages such as
 Scala.
 
+#### The Option Type
+
+One common example of an algebraic data type is the **Option** type in Scala.
+For any type `T`, the values of type `Option[T]` are either `Some(x)`, where `x` is a value
+of type `T`, or the special value `None`.
+That is, the type `Option[T]` is essentially the disjoint sum of `T` with one extra value
+indicating the absence of information.
+This is an alternative to the practice in many languages of using a **null pointer** to
+indicate something missing, without the issues that arise when a programmer forgets to
+check for the null case!
+Seeing that the return type of a function is `Option[T]` is a clear signal that the function
+might or might not return a value of type `T`, and that possibility needs to be checked before
+using the result.
+
 ### Pattern Matching
 
 The pattern-matching case analysis in a match expression can be very powerful,
