@@ -65,6 +65,7 @@ const sidebars = {
       'ds/balance',
       'ds/graphs',
       'ds/components',
+      'ds/paths',
     ],
     'Formal Languages': [
       'lang/languages',
