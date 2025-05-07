@@ -42,6 +42,13 @@ val isZero = (n: T) => n((x: T) => ff)(tt)
 val leq = (a: T) => (b: T) => isZero(minus(a)(b))
 val eq = (a: T) => (b: T) => and(leq(a)(b))(leq(b)(a))
 
+val fix = (f: T) => ((x: T) => f((v: T) => x(x)(v)))((x: T) => f((v: T) => x(x)(v)))
+
+val fact = {
+  val body = (f: T) => (n: T) => cond(isZero(n))(one)((v: T) => times(n)(f(pred(n)))(v)) // need lazy cond
+  fix(body)
+}
+
 zero.asNat
 one.asNat
 two.asNat
@@ -71,3 +78,8 @@ leq(ten)(six).asBool
 leq(six)(ten).asBool
 eq(six)(ten).asBool
 eq(ten)(ten).asBool
+
+fact(four).asNat
+fact(five).asNat
+fact(six).asNat
+fact(seven).asNat
