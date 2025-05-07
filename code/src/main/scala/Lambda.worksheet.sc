@@ -49,6 +49,18 @@ val fact = {
   fix(body)
 }
 
+// See https://en.wikipedia.org/wiki/Church_encoding#Represent_the_list_using_right_fold
+val nil = (c: T) => (n: T) => n
+val cons = (h: T) => (t: T) => (c: T) => (n: T) => c(h)(t(c)(n))
+val isNil = (l: T) => l((h: T) => (t: T) => false)(true)
+val head = (l: T) => l((h: T) => (t: T) => h)(false)
+val tail = {
+  val step = (h: T) => (p: T) => pair(second(p))(cons(h)(second(p)))
+  (l: T) => first(l(step)(pair(nil)(nil)))
+}
+val map = (f: T) => (l: T) => (c: T) => (n: T) => l((h: T) => (t: T) => c(f(h))(t))(n)
+
+// Testing
 zero.asNat
 one.asNat
 two.asNat
@@ -83,3 +95,15 @@ fact(four).asNat
 fact(five).asNat
 fact(six).asNat
 fact(seven).asNat
+
+val x = (cons(one)(cons(two)(cons(three)(cons(four)(nil)))))
+head(x).asNat
+head(tail(x)).asNat
+head(tail(tail(x))).asNat
+head(tail(tail(tail(x)))).asNat
+
+val y = map(fact)(x)
+head(y).asNat
+head(tail(y)).asNat
+head(tail(tail(y))).asNat
+head(tail(tail(tail(y)))).asNat
