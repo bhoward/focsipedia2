@@ -18,3 +18,11 @@
    + Intro to Functional Programming
    + Doodle Graphics (move reference to separate page)
    + Recursive Descent Parsing
+
+* Potential new topics:
+   + Hasse diagrams
+   + BDDs
+   + Tries
+   + Cayley graphs (as examples of DFA)?
+   + Markov chains
+   + Ropes
