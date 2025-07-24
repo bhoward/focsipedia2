@@ -174,9 +174,7 @@ const config = {
     mermaid: true,
   },
   themes: ['@docusaurus/theme-mermaid'],
-  future: {
-    experimental_faster: true,
-  },
+  future: {v4: true},
 };
 
 export default config;
