@@ -9,7 +9,7 @@ Functions are fundamental in computer programming,
 although not everything in programming that goes by the name of "function"
 is a function according to the [mathematical definition](../sets/functions.md).
 
-In computer programming, a function is a routine that is given 
+In computer programming, a function is a piece of program code that is given 
 some data as input and that will calculate and return an
 answer based on that data.
 For example, in the Java programming
@@ -30,8 +30,7 @@ have names that consist of more than one character, since
 it's done all the time in computer programming.)
 The first line of the above function definition,
 "`int cube(int n)`", says that we are defining
-a function named _cube_ whose range is _int_
-and whose domain is _int_.
+a function named _cube_ whose domain (input) and range (output) are both _int_.
 In the usual notation for functions, we would express this as
 $\textit{cube}\colon \textit{int}\to\textit{int}$,
 or possibly as $\textit{cube}\in{\textit{int}}^{\textit{\small{int}}}$,
@@ -57,7 +56,7 @@ In these notes we will be using the programming language [Scala](../scala.md).
 You may think of Scala as an enhanced relative of Java, which adds excellent
 support for **functional programming**, similar to how C++ and Java added support
 for **object-oriented programming** to the family of C-like languages.
-Scala is a hybrid language, which allows programmers to express solutions in
+Scala is a hybrid language that allows programmers to express solutions in
 both the object-oriented and functional styles; one of our goals in this course
 is to see how these approaches can complement each other, rather than being in
 opposition.
@@ -142,7 +141,7 @@ Unlike Java, a typical functional programming language such as Scala,
 Haskell, or ReasonML will actively discourage the use of side-effects
 in functions.[^1]
 The benefit of restricting the programmer to
-**pure** functions, that always return the same value for a given
+**pure** functions, which always return the same value for a given
 argument, is that it becomes possible to reason about the behavior
 **algebraically**, freely substituting the returned values in place
 of function calls without having to worry about whether some "hidden state"
@@ -163,7 +162,7 @@ For example, suppose that we have a function that computes the value of
 some polynomial, such as $f(x)=x^2+2x+1$.
 If we know that another function
 $g\colon\textit{String}\to\textit{int}$ is pure, then we can be sure
-that $f(g(s))$ is the same as $g(s)^2+2\cdot g(s)+1$, as well as
+that $f(g(s))$ is the same as $g(s)^2+2\cdot g(s)+1$, and also the same as
 $(g(s)+1)^2$.
 All of these are algebraically equivalent, as long as $g$ is pure.
 This allows the programmer to reason more easily about the
@@ -185,58 +184,6 @@ When a value is bound to a
 variable with a `val` statement, that variable will then remain bound to that
 value for as long as the variable exists.
 (This is similar to declaring the variable `final` in Java, or `const` in C++.)
-A variable will cease to exist when the
-block (such as a function body) containing it is finished:
-```scala mdoc
-{
-  val x = 42
-  println(x)
-}
-```
-```scala mdoc:fail
-/* x no longer exists here */
-println(x)
-```
-
-A variable may be temporarily **shadowed** by another variable with the same name.
-This may look like an assignment of a changed value to a variable,
-but each use of the `val` statement will create a new named location in
-memory; if the shadowing variable goes away, the original one will become
-visible again with its correct value:
-```scala mdoc
-val x = 42
-println(x) /* prints 42 */
-
-{
-  val x = 17 /* shadows earlier definition of x */
-  println(x) /* prints 17 */
-}
-println(x) /* prints 42 again */
-```
-
-Again, this behavior permits algebraic reasoning about the program.
-The above code is equivalent to
-```scala mdoc:reset
-val x = 42
-println(x)
-
-{
-  val y = 17
-  println(y)
-}
-println(x)
-```
-where we have uniformly renamed the inner variable _x_ as _y_ to make it clear
-that they are distinct variables.
-It is also equivalent to
-```scala mdoc
-println(42)
-println(17)
-println(42)
-```
-where we have replaced each use of our identifiers with its value.
-The only difference here is that the identifier _x_ no longer has the value 42
-bound to it, so it will not be available later in the program.
 
 ## Expressions and the Substitution Model
 
@@ -318,6 +265,46 @@ coincidentally used the same variable names).
 println(greeting)
 ```
 
+A variable may be temporarily **shadowed** by another variable with the same name.
+This may look like an assignment of a changed value to a variable,
+but each use of the `val` statement will create a new named location in
+memory; if the shadowing variable goes away, the original one will become
+visible again with its correct value:
+```scala mdoc
+val x = 42
+println(x) /* prints 42 */
+
+{
+  val x = 17 /* shadows earlier definition of x */
+  println(x) /* prints 17 */
+}
+println(x) /* prints 42 again */
+```
+
+Again, this behavior permits algebraic reasoning about the program.
+The above code is equivalent to
+```scala mdoc:reset
+val x = 42
+println(x)
+
+{
+  val y = 17
+  println(y)
+}
+println(x)
+```
+where we have uniformly renamed the inner variable _x_ as _y_ to make it clear
+that they are distinct variables.
+It is also equivalent to
+```scala mdoc
+println(42)
+println(17)
+println(42)
+```
+where we have replaced each use of our identifiers with its value.
+The only difference here is that the identifier _x_ no longer has the value 42
+bound to it, so it will not be available later in the program.
+
 Predict the result bound to the outer `x` in this code (this is actually a case where we need the braces to embed the blocks within a larger expression):
 ```scala
 val x = {
@@ -393,7 +380,7 @@ or assigning a new value to a variable declared with `var`, but we will similarl
 
 ## First-Class Functions
 
-In most programming languages, functions are not first-class
+In many traditional programming languages, functions are not first-class
 objects.  That is, a function cannot
 be treated as a data value in the same way as a _String_
 or an _int_.  However, recent versions of Java have taken a step in this
