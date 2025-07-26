@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkfocsipedia=self.webpackChunkfocsipedia||[]).push([[2068],{32068:(e,s,c)=>{c.d(s,{createInfoServices:()=>a.v});var a=c(41366);c(58198)}}]);
