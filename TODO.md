@@ -24,4 +24,6 @@
    + Tries
    + Cayley graphs (as examples of DFA)?
    + Markov chains
+   + PageRank
    + Ropes
+   + Zippers (simple case: gap buffer)
