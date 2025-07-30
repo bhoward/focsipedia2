@@ -335,10 +335,14 @@ object ExprParse:
   def top[$: P]: P[Expr] = P ( Start ~ expr ~ End )
 
   def expr[$: P]: P[Expr] = P( term ~ (addOp ~ term).rep )
-    .map { case (t, rest) => rest.foldLeft(t) { case (e1, (op, e2)) => BinOp(e1, op, e2) }}
+    .map {
+        case (t, rest) => rest.foldLeft(t) { case (e1, (op, e2)) => BinOp(e1, op, e2) }
+    }
 
   def term[$: P]: P[Expr] = P( factor ~ (mulOp ~ factor).rep )
-    .map { case (f, rest) => rest.foldLeft(f) { case (e1, (op, e2)) => BinOp(e1, op, e2) }}
+    .map {
+        case (f, rest) => rest.foldLeft(f) { case (e1, (op, e2)) => BinOp(e1, op, e2) }
+    }
 
   def factor[$: P]: P[Expr] = P( id | num | "(" ~ expr ~ ")" )
 
@@ -348,7 +352,9 @@ object ExprParse:
 
   // Lexical Syntax
   def ident[$: P] = P( CharIn("A-Za-z").! ~~ CharsWhileIn("A-Za-z0-9").?.! )
-    .map { case (init, rest) => init + rest }
+    .map {
+        case (init, rest) => init + rest
+    }
 
   def number[$: P] = P( ("-".? ~~ CharsWhileIn("0-9")).! )
 
