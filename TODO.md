@@ -15,7 +15,6 @@
    + Knuth-Morris-Pratt
 
 * Revise these sections:
-   + Doodle Graphics (move reference to separate page)
    + Recursive Descent Parsing
 
 * Potential new topics:

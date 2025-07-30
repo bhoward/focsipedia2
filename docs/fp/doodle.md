@@ -34,15 +34,49 @@ You can either clone it to your local machine and run the SBT console there, or 
 run it on the web.
 Instructions for both approaches are in the README file within the repository.
 
-The remainder of this page is a reference to the Doodle library, plus some examples.
+Most of this page is a reference to the Doodle library, plus some examples.
 Substantial parts of this were co-written by [Sang Truong](https://cs.stanford.edu/~sttruong/) (DePauw 2021).
 
-## Basic Types
+## Basic Concepts
+
+The fundamental type of a drawing in Doodle is `Image`.[^1]
+Images are built up from primitive shapes such as rectangles and circles, together with operations to combine larger images out of smaller ones.
+Once you have constructed an `Image` object, it may be displayed on the screen with its `.draw()` method.
+For example,
+```scala
+val demo1 = Image.rectangle(150, 50) `beside` Image.circle(100)
+demo1.draw()
+```
+```scala mdoc:passthrough
+val demo1 = Image.rectangle(150, 50) `beside` Image.circle(100)
+RenderFile(demo1, "demo1.png")
+```
+
+Each image has an associated origin point and bounding box (width and height), which are used to determine the relative positioning when combining images.
+In the example above, the `` `beside` `` operator combines the images side-by-side, with their origin points aligned vertically.
+You can use the `.debug` method on an image to add a visual representation of the origin and bounding box:
+```scala mdoc:silent
+val demo1before = Image.rectangle(150, 50).debug `beside` Image.circle(100).debug
+val demo1after = (Image.rectangle(150, 50) `beside` Image.circle(100)).debug
+val demo1debug = demo1before `beside` Image.text("  becomes  ") `beside` demo1after
+```
+```scala mdoc:passthrough
+RenderFile(demo1debug, "demo1debug.png")
+```
+
+[^1]: The Doodle library also has a type called `Picture` which parallels many of the features of `Image`, but which
+has some more advanced capabilities.
+We will not be discussing this further; see the
+[Doodle documentation](https://www.creativescala.org/doodle/) for details.
+
+## Reference
+
+### Basic Types
 
 When working with graphics, we will need some basic types beyond `Int`, `Double`, and `String`.
 Although we could use `Double` to describe **angles**, it will be helpful to have a separate `Angle` type, which
 may be thought of as a `Double` together with a "unit" (_e.g._, degrees or radians).
-The Doodle library defines methods `degrees`, `radians`, and `spins` as extensions on the `Double` type, so
+The Doodle library defines methods `.degrees`, `.radians`, and `.spins` as extensions on the `Double` type, so
 that the values `360.degrees`, `2 * math.Pi.radians`, and `1.turns` all represent one complete turn around a circle.
 
 **Points** in two dimensions can be specified by two coordinates, `x` and `y`, where we adopt the convention that
@@ -56,12 +90,13 @@ and `theta` is an `Angle` giving the counter-clockwise angle from the `x`-axis.
 For example, `Point(100, 0.degrees)` is the same as `Point(100, 0)`, while `Point(100, math.Pi.radians / 2)` and
 `Point(100, 0.25.turns)` are both the same as `Point(0, 100)`.
 
-## The `Image` type
-The fundamental type of a drawing in Doodle is `Image`.[^1]
+### Geometric Shapes
+
 Some built-in functions used to construct geometric shapes are `circle`, `rectangle`, `triangle`, `regularPolygon`, `star`, and `rightArrow`.
 There are also some special cases and variations: `square`, `roundedRectangle`, `equilateralTriangle`, `arc`, `pie`, and `line`.
 The size arguments for all of these functions are of type `Double`, plus the `regularPolygon` and `star` functions also take the number of vertices as an `Int`.
 The `arc` and `pie` functions also take an argument of type `Angle`, as discussed above.
+
 Every image in Doodle has a **bounding box**, which is a minimal rectangle that can cover the image.
 The center of the bounding box by default is at (0, 0), the **origin** for that image (exceptions include
 the equilateral triangle, whose origin is the center of the triangle, and the arc and pie shapes, whose origin is
@@ -84,13 +119,8 @@ Details about the built-in functions to create geometric shapes in Doodle are in
 | `Image.pie(d, theta)` | Diameter (d) and Angle extent (theta) | varies |
 | `Image.line(x, y)` | Horizontal (x) and Vertical (y) | $x\times y$ |
 
-[^1]: The Doodle library also has a type called `Picture` which parallels many of the features of `Image`, but which
-has some more advanced capabilities.
-We will not be discussing this further; see the
-[Doodle documentation](https://www.creativescala.org/doodle/) for details.
-
 Method `.draw()` is used to display the `Image`:
-```scala
+```scala mdoc:silent
 val row1 = Image.rectangle(100, 50) `beside`
   Image.triangle(50, 100) `beside`
   Image.circle(100) `beside`
@@ -104,22 +134,8 @@ val row2 = Image.square(100) `beside`
   Image.pie(100, 60.degrees) `beside`
   Image.line(100, 50)
 val image = row1 `above` row2
-image.draw()
 ```
 ```scala mdoc:passthrough
-val row1 = Image.rectangle(100, 50) `beside`
-  Image.triangle(50, 100) `beside`
-  Image.circle(100) `beside`
-  Image.regularPolygon(6, 50) `beside`
-  Image.star(7, 50, 20) `beside`
-  Image.rightArrow(100, 50)
-val row2 = Image.square(100) `beside`
-  Image.roundedRectangle(100, 50, 10) `beside`
-  Image.equilateralTriangle(100) `beside`
-  Image.arc(100, 60.degrees) `beside`
-  Image.pie(100, 60.degrees) `beside`
-  Image.line(100, 50)
-val image = row1 `above` row2
 RenderFile(image, "shapes.png")
 ```
 
@@ -240,7 +256,7 @@ val sineImage = Image.interpolatingSpline(points)
 RenderFile(sineImage, "sineWave.png")
 ```
 
-## Position and Manipulation
+### Position and Manipulation
 
 Of course, the real interest of a graphics library is not just in the basic shapes, but
 in how to combine them into larger images.
@@ -411,7 +427,7 @@ val transformDemo = tri.transform(scaleXform).on(tri2) `beside`
 RenderFile(transformDemo, "transformDemo.png")
 ```
 
-## Styles
+### Styles
 
 Various details of the drawing of an `Image` may be customized, falling into two broad categories of
 **stroking** and **filling**.
@@ -579,6 +595,9 @@ RenderFile(gradientDemo, "gradientDemo.png")
 ```
 
 ## Some Demonstrations
+
+### Clock
+
 Here is an arrow using `OpenPath`, and a function to display a clock face for a given time:
 ```scala mdoc:silent
 def arrow(len: Double): Image = {
@@ -606,6 +625,8 @@ val arrowDemo = arrow(100).debug `beside`
 RenderFile(arrowDemo, "arrowDemo.png")
 ```
 
+### Linked List
+
 Using the arrow, here is a function to visualize a linked list:
 ```scala mdoc:silent
 def listNode(n: Int): Image = {
@@ -627,6 +648,8 @@ val listDemo = showList(List(1, 2, 3, 4, 5, 6))
 ```scala mdoc:passthrough
 RenderFile(listDemo, "listDemo.png")
 ```
+
+### Sierpinski Fractal
 
 Finally, here is a function to draw a **fractal** known as the
 [Sierpiński Triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle),
