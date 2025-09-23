@@ -27,3 +27,4 @@
    + Ropes
    + Zippers (simple case: gap buffer)
    + Finger trees?
+   + Union-Find
