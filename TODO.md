@@ -15,6 +15,8 @@
    + Knuth-Morris-Pratt
 
 * Revise these sections:
+   + Balanced Binary Search Trees
+   + Add complete binary tree heaps?
    + Recursive Descent Parsing
 
 * Potential new topics:
