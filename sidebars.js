@@ -67,6 +67,10 @@ const sidebars = {
       'ds/components',
       'ds/paths',
     ],
+    'Algorithms': [
+      'ds/decrease',
+      'ds/divide',
+    ],
     'Formal Languages': [
       'lang/languages',
       'lang/regexp',

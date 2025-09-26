@@ -1,7 +1,6 @@
 * Write these sections:
-   + Shortest Paths; Minimum Spanning Trees
+   + Shortest Paths; Minimum Spanning Trees (need edge labels on graphs)
    + Transitive Closure
-   + Algorithm Strategies: Decrease-and-Conquer
    + Divide-and-Conquer
    + Greedy Algorithms
    + Dynamic Programming

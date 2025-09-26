@@ -46,9 +46,9 @@ Note that it does not precisely follow the order in the book's table of contents
 ## Week 6: Recurrences. Algorithm Strategies.
 ### [Running Time and Recurrences](ds/recurrence.md)
 
-### Algorithm Strategies: Decrease-and-Conquer
+### Algorithm Strategies: [Decrease-and-Conquer](ds/decrease.md)
 
-### Divide-and-Conquer
+### [Divide-and-Conquer](ds/divide.md)
 
 ## Week 7: Greedy Algorithms. Dynamic Programming.
 ### Greedy Algorithms
