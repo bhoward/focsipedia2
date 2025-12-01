@@ -79,7 +79,7 @@ Note that it does not precisely follow the order in the book's table of contents
 
 ### [Languages](lang/languages.md), [Regular Expressions](lang/regexp.md), and [Applications](lang/regexpapp.md); [Finite-State Automata](lang/fsa.md)
 
-### [State Machines](logic/state.md), and their implementations in [Java and ReasonML](fp/state.md)
+### [State Machines](logic/state.md), and their implementations in [Java and Scala](fp/state.md)
 
 ## Week 12: Context-Free Languages. Parsing.
 ### [Non-deterministic Automata](lang/nfa.md), [Equivalence with Regular Expressions](lang/fsareg.md)

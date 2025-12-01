@@ -16,6 +16,7 @@
 * Revise these sections:
    + Balanced Binary Search Trees
    + Add complete binary tree heaps?
+   + State Machines
    + Recursive Descent Parsing
 
 * Potential new topics:

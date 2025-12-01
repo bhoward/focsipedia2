@@ -1,6 +1,6 @@
 ---
 id: state
-title: State Machines in Java and ReasonML
+title: State Machines in Java and Scala
 ---
 
 There are many ways to implement the state machine concept in code. The essence is that
@@ -96,54 +96,58 @@ it might be harder to see which point in the code corresponds to each state.
 
 The Java version is a very imperative approach to the problem, depending as it does on changes
 to the variable `index` as it traces through the sequence of method calls and loops. Here is a
-more functional equivalent in ReasonML, where indexing into a string is replaced by traversing
+more functional equivalent in Scala, where indexing into a string is replaced by traversing
 through a list of characters, and the `findChar` method returns a pair of a boolean plus the
 list of the remaining unsearched characters:
 
-```reason edit
-let rec findChar = (chars, c) => {
-  switch (chars) {
-  | [] => (false, [])
-  | [head, ...tail] => if (head == c) {
-      (true, tail)
-    } else {
-      findChar(tail, c)
-    }
+```scala mdoc
+def findChar(chars: List[Char], c: Char): (Boolean, List[Char]) = {
+  chars match {
+    case Nil => (false, Nil)
+    case head :: tail =>
+      if head == c
+      then (true, tail)
+      else findChar(tail, c)
   }
-};
+}
 
-let test = word => {
+def test(word: String): Boolean = {
   /* expand a string to a list of characters */
-  let chars = List.init(String.length(word), String.get(word));
+  val chars = word.toList
   /* state 0 */
-  let (foundA, rest) = findChar(chars, 'a');
-  if (foundA) {
+  val (foundA, restA) = findChar(chars, 'a')
+  if foundA then {
     /* state 1 */
-    let (foundE, rest) = findChar(rest, 'e');
-    if (foundE) {
+    val (foundE, restE) = findChar(restA, 'e')
+    if foundE then {
       /* state 2 */
-      let (foundI, rest) = findChar(rest, 'i');
-      if (foundI) {
+      val (foundI, restI) = findChar(restE, 'i')
+      if foundI then {
         /* state 3 */
-        let (foundO, rest) = findChar(rest, 'o');
-        if (foundO) {
+        val (foundO, restO) = findChar(restI, 'o')
+        if foundO then {
           /* state 4 */
-          let (foundU, rest) = findChar(rest, 'u');
-          if (foundU) {
+          val (foundU, restU) = findChar(restO, 'u')
+          if foundU then {
             /* state 5 */
             true
-          } else false
-        } else false
-      } else false
-    } else false
-  } else false
-};
+          }
+          else false
+        }
+        else false
+      }
+      else false
+    }
+    else false
+  }
+  else false
+}
 
-test("abstemious"); /* should be true */
-test("sacrilegious"); /* should be true */
-test("undercoating"); /* should be false -- not in order */
-test("religious"); /* should be false -- no a */
-test("aeiou"); /* should be true */
+test("abstemious") /* should be true */
+test("sacrilegious") /* should be true */
+test("undercoating") /* should be false -- not in order */
+test("religious") /* should be false -- no a */
+test("aeiou") /* should be true */
 ```
 
 ### Integer state with transitions in a graph
@@ -158,28 +162,29 @@ Each of the functions in
 this case is particularly simple, since at most one edge leads away from each state
 to another. See below for other examples using more complicated graphs.
 
-```reason edit
-let trans = [|
-  (c) => if (c == 'a') 1 else 0, /* state 0 */
-  (c) => if (c == 'e') 2 else 1, /* state 1 */
-  (c) => if (c == 'i') 3 else 2, /* state 2 */
-  (c) => if (c == 'o') 4 else 3, /* state 3 */
-  (c) => if (c == 'u') 5 else 4, /* state 4 */
-  (c) => 5 /* state 5 */
-|];
-
-let test = word => {
-  let chars = List.init(String.length(word), String.get(word));
+```scala mdoc:reset:silent
+val trans = Array[Char => Int](
+  c => if c == 'a' then 1 else 0, /* state 0 */
+  c => if c == 'e' then 2 else 1, /* state 1 */
+  c => if c == 'i' then 3 else 2, /* state 2 */
+  c => if c == 'o' then 4 else 3, /* state 3 */
+  c => if c == 'u' then 5 else 4, /* state 4 */
+  c => 5 /* state 5 */
+)
+```
+```scala mdoc
+def test(word: String): Boolean = {
+  val chars = word.toList
   /* List.fold_left is our reduce function */
-	let final_state = List.fold_left((state, c) => trans[state](c), 0, chars);
+  val final_state = chars.foldLeft(0)((state, c) => trans(state)(c))
   final_state == 5 /* returns true if accepting state reached */
 }
 
-test("abstemious"); /* should be true */
-test("sacrilegious"); /* should be true */
-test("undercoating"); /* should be false -- not in order */
-test("religious"); /* should be false -- no a */
-test("aeiou"); /* should be true */
+test("abstemious") /* should be true */
+test("sacrilegious") /* should be true */
+test("undercoating") /* should be false -- not in order */
+test("religious") /* should be false -- no a */
+test("aeiou") /* should be true */
 ```
 
 Walking over a list and applying a transition function from the current state and input
@@ -293,31 +298,39 @@ represents each state by a pair of a boolean and a function from characters to s
 Since the `state` type is defined in terms of itself, we need to wrap it up in a
 constructor:
 
-```reason demo
-type state = State(bool, char => state);
+```scala mdoc:reset
+case class State(accept: Boolean, trans: Char => State)
 ```
 
 Here is the code for our "aeiou" machine:
-```reason edit
-let rec initialState = State(false, c => if (c == 'a') aState else initialState)
-and aState = State(false, c => if (c == 'e') aeState else aState)
-and aeState = State(false, c => if (c == 'i') aeiState else aeState)
-and aeiState = State(false, c => if (c == 'o') aeioState else aeiState)
-and aeioState = State(false, c => if (c == 'u') aeiouState else aeioState)
-and aeiouState = State(true, _ => aeiouState);
+```scala mdoc
+lazy val initialState: State =
+  State(false, c => if c == 'a' then aState else initialState)
+lazy val aState: State =
+  State(false, c => if c == 'e' then aeState else aState)
+lazy val aeState: State =
+  State(false, c => if c == 'i' then aeiState else aeState)
+lazy val aeiState: State =
+  State(false, c => if c == 'o' then aeioState else aeiState)
+lazy val aeioState: State =
+  State(false, c => if c == 'u' then aeiouState else aeioState)
+lazy val aeiouState: State =
+  State(true, _ => aeiouState)
 
-let test = word => {
-  let chars = List.init(String.length(word), String.get(word));
-  let State(accept, _) =
-    List.fold_left((State(_, trans), c) => trans(c), initialState, chars);
+def test(word: String): Boolean = {
+  val chars = word.toList
+  val State(accept, _) =
+    chars.foldLeft(initialState) {
+      case (State(_, trans), c) => trans(c)
+    }
   accept
-};
+}
 
-test("abstemious"); /* should be true */
-test("sacrilegious"); /* should be true */
-test("undercoating"); /* should be false -- not in order */
-test("religious"); /* should be false -- no a */
-test("aeiou"); /* should be true */
+test("abstemious") /* should be true */
+test("sacrilegious") /* should be true */
+test("undercoating") /* should be false -- not in order */
+test("religious") /* should be false -- no a */
+test("aeiou") /* should be true */
 ```
 
 ## Vending Machine
@@ -365,43 +378,43 @@ the transition (this means that it is a Mealy machine). Finally, there is no acc
 running as long as there is input; in the example below, we will print "Candy!"
 whenever it produces a piece of candy.
 
-```reason edit
-let vtrans = (amount, input) => {
-  switch (amount, input) {
-  | (0, 'N') => (5, false)
-  | (0, 'D') => (10, false)
-  | (0, 'Q') => (0, true)
-  | (5, 'N') => (10, false)
-  | (5, 'D') => (15, false)
-  | (5, 'Q') => (5, true)
-  | (10, 'N') => (15, false)
-  | (10, 'D') => (20, false)
-  | (10, 'Q') => (10, true)
-  | (15, 'N') => (20, false)
-  | (15, 'D') => (0, true)
-  | (15, 'Q') => (15, true)
-  | (20, 'N') => (0, true)
-  | (20, 'D') => (5, true)
-  | (20, 'Q') => (20, true)
-  | _ => failwith("Invalid state or input")
+```scala mdoc
+def vtrans(amount: Int, input: Char): (Int, Boolean) = {
+  (amount, input) match {
+    case (0, 'N') => (5, false)
+    case (0, 'D') => (10, false)
+    case (0, 'Q') => (0, true)
+    case (5, 'N') => (10, false)
+    case (5, 'D') => (15, false)
+    case (5, 'Q') => (5, true)
+    case (10, 'N') => (15, false)
+    case (10, 'D') => (20, false)
+    case (10, 'Q') => (10, true)
+    case (15, 'N') => (20, false)
+    case (15, 'D') => (0, true)
+    case (15, 'Q') => (15, true)
+    case (20, 'N') => (0, true)
+    case (20, 'D') => (5, true)
+    case (20, 'Q') => (20, true)
   }
 }
 
-let vend = coins => {
-  let rec aux = (coins, state) => {
-    switch (coins) {
-    | [] => state
-    | [head, ...tail] => {
-        let (state', candy) = vtrans(state, head);
-        if (candy) print_string("Candy! ");
-        aux(tail, state')
+def vend(coins: List[Char]): Int = {
+  def aux(coins: List[Char], state: Int): Int = {
+    coins match {
+      case Nil => state
+      case head :: tail => {
+        val (state2, candy) = vtrans(state, head)
+        if candy then println("Candy!")
+        aux(tail, state2)
       }
     }
-  };
-  aux(coins, 0)
-};
+  }
 
-vend(['N', 'N', 'N', 'N', 'Q', 'D', 'N', 'N', 'D']); /* Should print Candy! three times */
+  aux(coins, 0)
+}
+
+vend(List('N', 'N', 'N', 'N', 'Q', 'D', 'N', 'N', 'D')) /* Should print Candy! three times */
 ```
 
 ### Object-oriented approach with encapsulated state
