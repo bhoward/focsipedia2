@@ -24,3 +24,4 @@ target/
 .metals/
 .bloop/
 metals.sbt
+package-lock.json
