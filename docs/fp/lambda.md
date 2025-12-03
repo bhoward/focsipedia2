@@ -228,30 +228,30 @@ reportedly while visiting the dentist.
 
 ## Recursion
 
-Consider the recursive definition of the factorial function in ReasonML:
+Consider the recursive definition of the factorial function in Scala:
 
-```reason edit
-let rec fact = n => {
+```scala mdoc
+def fact(n: Int): Int = {
   if (n == 0) {
     1
   } else {
     n * fact(n - 1)
   }
-};
+}
 ```
 
-The body of the function needs to have access to the definition of `fact` itself; this is the point of the `rec` qualifier with `let`.
+The body of the function needs to have access to the definition of `fact` itself (this is one difference between using `def` and `val`).
 If we could provide the definition of `fact` as another argument to the function, then we could express factorial with the following
 "template":
 
-```reason edit
-let fact_template = f => n => {
+```scala mdoc
+def fact_template(f: Int => Int)(n: Int): Int = {
   if (n == 0) {
     1
   } else {
     n * f(n - 1)
   }
-};
+}
 ```
 
 This template describes how we could define `fact` if we already had the `fact` function: `fact = fact_template(fact)`.
@@ -276,7 +276,7 @@ That is, $\textrm{FIX}\;g=g(\textrm{FIX}\;g)$, so $f=\textrm{FIX}\;g$ is a solut
 approximation to factorial and produces a better approximation. Finding the fixed point is just taking the limit of this series of approximations.
 
 Using FIX, we may define the factorial function (and by this point you should be convinced that we may define any pure function that we could have
-written in ReasonML) as follows:
+written in Scala) as follows:
 $$
 \begin{aligned}
 \textrm{FACT}&\equiv\textrm{FIX}\;(\lambda f.\lambda n.\;\textrm{IF}\;(\textrm{ISZERO}\;n)\;1\;(\textrm{MULT}\;n\;(f\;(\textrm{PRED}\;n))))
