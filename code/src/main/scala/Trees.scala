@@ -243,18 +243,18 @@ object AVLTree {
       case Empty => t
       case Node(left, value, right) =>
         if left.height - right.height > 1 then
-          val Node(ll, lv, lr) = left
+          val Node(ll, lv, lr) = left.asInstanceOf[Node]
           if ll.height > lr.height then // Left-Left
             Node(ll, lv, Node(lr, value, right))
           else // Left-Right
-            val Node(rl, rv, rr) = lr
+            val Node(rl, rv, rr) = lr.asInstanceOf[Node]
             Node(Node(Node(ll, lv, rl), rv, rr), value, right)
         else if right.height - left.height > 1 then
-          val Node(rl, rv, rr) = right
+          val Node(rl, rv, rr) = right.asInstanceOf[Node]
           if rl.height < rr.height then // Right-Right
             Node(Node(left, value, rl), rv, rr)
           else // Right-Left
-            val Node(ll, lv, lr) = rl
+            val Node(ll, lv, lr) = rl.asInstanceOf[Node]
             Node(left, value, Node(ll, lv, Node(lr, rv, rr)))
         else
           Node(rotate(left), value, rotate(right))

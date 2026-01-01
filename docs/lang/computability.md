@@ -82,7 +82,7 @@ actions at each step. Non-deterministic Turing machines cannot be
 used to compute functions, since a function can have only one possible
 output for any given input. However, they can be used to accept
 languages. We say that a non-deterministic Turing machine accepts
-a language $L$ is it is _possible_ for the machine to halt
+a language $L$ if it is _possible_ for the machine to halt
 on input $w$ if and only if $w\in L$. The class of languages 
 accepted by non-deterministic Turing machines is the same as the
 class of languages accepted by deterministic Turing machines.
