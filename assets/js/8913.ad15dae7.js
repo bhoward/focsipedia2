@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkfocsipedia=globalThis.webpackChunkfocsipedia||[]).push([[8913],{58913(i,s,a){a.r(s)}}]);
