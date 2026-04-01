@@ -19,7 +19,7 @@ def logoBackground(n: Int): Image = {
     logoBackground(n - 1) `on` Image.circle(r).scale(2, 1).fillColor(Color.hsl(12.degrees * n, 1, 0.5)).noStroke
 }
 
-val f = Font.defaultSansSerif.bold.size(60)
+val f = Font.defaultSansSerif.withBold.withSize(60)
 val logo = Image.text("Doodle!").font(f) `on` logoBackground(50)
 RenderFile(logo, "logo.png")
 ```
@@ -148,7 +148,7 @@ Another kind of primitive image is text.
 By default, `Image.text(s)` gives you the string `s` rendered in a plain 12-point sans-serif font.
 You can change the font with the `font` method, which takes an object of type `Font`.
 There are two predefined `Font` values: `Font.defaultSansSerif` and `Font.defaultSerif`.
-They may be modified with methods `bold`, `italic`, and `size(p)`, where `p` is an integer point size.
+They may be modified with methods `withBold`, `withItalic`, and `withSize(p)`, where `p` is an integer point size.
 
 You can also create a `Font` object by specifying four values: `FontFamily`, `FontStyle`, `FontWeight`, and `FontSize`.
 In addition to `FontFamily.serif` and `FontFamily.sansSerif`, there are `FontFamily.monospaced` and `FontFamily.named(s)`,
@@ -161,7 +161,7 @@ Putting this all together, you might choose a 24-point monospaced italic font wi
 
 ```scala mdoc:silent
 val textImage =
-  Image.text("Hello World!").font(Font.defaultSerif.size(36).bold) `above`
+  Image.text("Hello World!").font(Font.defaultSerif.withSize(36).withBold) `above`
   Image.text("Lorem ipsum").font(
     Font(FontFamily.monospaced, FontStyle.italic, FontWeight.normal, FontSize.points(24)))
 ```
@@ -517,23 +517,23 @@ RenderFile(paletteDemo, "paletteDemo.png")
 
 In addition to the red, green, and blue components, each color value carries a fourth component, a `Double` value
 in the range 0 to 1 known as **alpha**.
-Such values may be constructed with the methods `Color.rgba(r, g, b, a)` and `Color.hsla(r, g, b, a)`, where the
-fourth argument, `a`, is the alpha value.
 The alpha value determines how transparent a color is when it is drawn on top of something else.
 If alpha is 1.0 (the default if not specified), then the color is completely opaque&mdash;nothing
 shows through from below.
 If alpha is 0.0, then the color is completely transparent&mdash;the underlying image is unchanged.
 For values of alpha in between, the alphas of the top and underlying layers are used to proportionally blend
 the colors according to the OVER [compositing rule](https://en.wikipedia.org/wiki/Alpha_compositing).
+
+The alpha value of a color may be modified by calling the `alpha(a)` method, where `a` is a "normalized" number: a `Double` to which the `normalized` operation has been applied, to restrict it to the proper range.
 Here is an example:
 ```scala mdoc:silent
 val front = Image.circle(100)
 val back = Image.square(100).fillColor(Color.red)
 val alphaDemo = back `under`
-  front.fillColor(Color.rgba(0, 0, 255, 0.25)).at(-50, 50) `under`
-  front.fillColor(Color.rgba(0, 0, 255, 0.5)).at(50, 50) `under`
-  front.fillColor(Color.rgba(0, 0, 255, 0.75)).at(-50, -50) `under`
-  front.fillColor(Color.rgba(0, 0, 255, 1)).at(50, -50)
+  front.fillColor(Color.rgb(0, 0, 255).alpha(0.25.normalized)).at(-50, 50) `under`
+  front.fillColor(Color.rgb(0, 0, 255).alpha(0.5.normalized)).at(50, 50) `under`
+  front.fillColor(Color.rgb(0, 0, 255).alpha(0.75.normalized)).at(-50, -50) `under`
+  front.fillColor(Color.rgb(0, 0, 255).alpha(1.normalized)).at(50, -50)
 ```
 ```scala mdoc:passthrough
 RenderFile(alphaDemo, "alphaDemo.png")
@@ -630,7 +630,7 @@ RenderFile(arrowDemo, "arrowDemo.png")
 Using the arrow, here is a function to visualize a linked list:
 ```scala mdoc:silent
 def listNode(n: Int): Image = {
-  val f = Font.defaultSansSerif.size(24)
+  val f = Font.defaultSansSerif.withSize(24)
   val field = Image.square(50).fillColor(Color.white).strokeWidth(2)
   val valueField = Image.text(n.toString).font(f) `on` field
   val nextField = arrow(50).rotate(-90.degrees) `on` field

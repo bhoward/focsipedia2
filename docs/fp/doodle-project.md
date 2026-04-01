@@ -172,7 +172,7 @@ val beeHead = Image.circle(7).fillColor(yellow)
 val bee = beeBody `on` beeHead.originAt(12, 0) `on` beeButt.originAt(-25, 0)
 val finalBee = bee `on` bottomWing `on` topWing
 
-val words = Image.text("~Bee Happy~").font(Font.defaultSerif.size(48))
+val words = Image.text("~Bee Happy~").font(Font.defaultSerif.withSize(48))
 
 /* Joining the text, honey comb, and bee all together */
 val finalHoneyComb = words `on` (honeyComb(10) `on` background).originAt(0, 10)
