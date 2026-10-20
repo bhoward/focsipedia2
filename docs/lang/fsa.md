@@ -174,7 +174,7 @@ can be represented pictorially as:
 
 ![Example DFA](/img/fsa1.png)
 
-<!--
+{/*
 ```reason hidden
 type graphLayout('n) = (list(('n, (float, float))), list(('n, 'n)));
 
@@ -288,7 +288,7 @@ let m1 = (["Start", "p", "q", "r"], [("Start", "p"), ("p", "p"), ("p", "q"), ("q
 
 draw(renderLayout(layoutGrid(m1, 4, 50.), s => s, sn1, se1));
 ```
--->
+*/}
 
 The arrow on the left indicates that $p$ is the start state; double
 circles indicate that a state is accepting. Looking at this picture, it should

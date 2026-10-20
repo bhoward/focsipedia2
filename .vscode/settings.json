@@ -3,6 +3,6 @@
     "code/java"
   ],
   "files.watcherExclude": {
-    "**/target": true
+    "**/target/**": true
   }
 }
